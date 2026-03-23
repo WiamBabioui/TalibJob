@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: 'https://talibjob-backend.up.railway.app/api', // URL Railway
   headers: { 'Content-Type': 'application/json' },
 });
 
