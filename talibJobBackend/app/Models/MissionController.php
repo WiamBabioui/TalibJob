@@ -1,0 +1,152 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Mission;
+use App\Models\Candidature;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class MissionController extends Controller
+{
+    // GET /api/missions  (liste publique avec filtres)
+    public function index(Request $request)
+    {
+        $query = Mission::with('entreprise')->active();
+
+        if ($request->filled('q'))     $query->search($request->q);
+        if ($request->filled('ville')) $query->where('lieu', 'like', '%'.$request->ville.'%');
+        if ($request->filled('type'))  $query->where('type', $request->type);
+
+        $missions = $query->orderByDesc('datePublication')
+            ->paginate(9)
+            ->through(fn($m) => [
+                'id'              => $m->id,
+                'titre'           => $m->titre,
+                'type'            => $m->type,
+                'remuneration'    => $m->remuneration,
+                'lieu'            => $m->lieu,
+                'entreprise'      => ['id' => $m->entreprise->id, 'nom' => $m->entreprise->nom, 'logo' => $m->entreprise->logo],
+                'datePublication' => $m->datePublication?->diffForHumans(),
+                'vues'            => $m->vues,
+            ]);
+
+        return response()->json($missions);
+    }
+
+    // GET /api/missions/{id}  (détail public)
+    public function show($id)
+    {
+        $mission = Mission::with('entreprise')->findOrFail($id);
+        $mission->increment('vues');
+
+        return response()->json([
+            'id'                  => $mission->id,
+            'titre'               => $mission->titre,
+            'description'         => $mission->description,
+            'type'                => $mission->type,
+            'competencesRequises' => $mission->competencesRequises,
+            'duree'               => $mission->duree,
+            'remuneration'        => $mission->remuneration,
+            'lieu'                => $mission->lieu,
+            'dateDebut'           => $mission->dateDebut?->format('d/m/Y'),
+            'dateFin'             => $mission->dateFin?->format('d/m/Y'),
+            'statut'              => $mission->statut,
+            'nombreCandidatures'  => $mission->nombreCandidatures,
+            'vues'                => $mission->vues,
+            'datePublication'     => $mission->datePublication?->format('d/m/Y'),
+            'entreprise'          => [
+                'id'          => $mission->entreprise->id,
+                'nom'         => $mission->entreprise->nom,
+                'secteur'     => $mission->entreprise->secteur,
+                'description' => $mission->entreprise->description,
+                'logo'        => $mission->entreprise->logo,
+                'siteWeb'     => $mission->entreprise->siteWeb,
+            ],
+        ]);
+    }
+
+    // POST /api/etudiant/missions/{id}/postuler
+    public function postuler(Request $request, $id)
+    {
+        $etudiant = $request->user();
+        $mission  = Mission::findOrFail($id);
+
+        $deja = Candidature::where('idEtudiant', $etudiant->id)
+            ->where('idMission', $id)->exists();
+
+        if ($deja) {
+            return response()->json(['error' => 'Vous avez déjà postulé à cette offre.'], 409);
+        }
+
+        Candidature::create([
+            'idEtudiant'       => $etudiant->id,
+            'idMission'        => $id,
+            'lettreMotivation' => $request->lettreMotivation,
+            'statut'           => 'en_attente',
+            'dateEnvoi'        => now(),
+        ]);
+
+        $mission->increment('nombreCandidatures');
+
+        return response()->json(['success' => 'Candidature envoyée avec succès !'], 201);
+    }
+
+    // POST /api/entreprise/missions  (publier une offre)
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'titre'        => 'required|string|max:150',
+            'description'  => 'required|string',
+            'type'         => 'required|string|max:50',
+            'lieu'         => 'required|string|max:100',
+            'remuneration' => 'nullable|numeric|min:0',
+        ], [
+            'titre.required'       => 'Le titre est obligatoire.',
+            'description.required' => 'La description est obligatoire.',
+            'type.required'        => 'Le type de contrat est obligatoire.',
+            'lieu.required'        => 'Le lieu est obligatoire.',
+            'remuneration.min'     => 'La rémunération ne peut pas être négative.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 422);
+        }
+
+        $mission = Mission::create([
+            'idEntreprise'        => $request->user()->id,
+            'titre'               => $request->titre,
+            'description'         => $request->description,
+            'type'                => $request->type,
+            'competencesRequises' => $request->competencesRequises ?? null,
+            'remuneration'        => $request->remuneration ? abs((float)$request->remuneration) : null,
+            'lieu'                => $request->lieu,
+            'statut'              => 'active',
+            'datePublication'     => now(),
+            'dateCreation'        => now(),
+            'dateModification'    => now(),
+        ]);
+
+        return response()->json(['success' => 'Offre publiée !', 'mission' => $mission], 201);
+    }
+
+    // GET /api/entreprise/missions
+    public function mesOffres(Request $request)
+    {
+        $offres = Mission::where('idEntreprise', $request->user()->id)
+            ->withCount('candidatures')
+            ->orderByDesc('dateCreation')
+            ->get()
+            ->map(fn($m) => [
+                'id'                 => $m->id,
+                'titre'              => $m->titre,
+                'type'               => $m->type,
+                'lieu'               => $m->lieu,
+                'statut'             => $m->statut,
+                'nombreCandidatures' => $m->candidatures_count,
+                'vues'               => $m->vues,
+            ]);
+
+        return response()->json($offres);
+    }
+}
