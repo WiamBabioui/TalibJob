@@ -19,13 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        'https://talib-job.vercel.app',  // TON URL VERCEL PRODUCTION
-        'http://localhost:5173',         // Vite (React local)
-        'http://localhost:5174',         // Vite (React local alternative)
-        'http://localhost:3000',         // React local standard
-        'http://127.0.0.1:5173',
-    ],
+    'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
 
