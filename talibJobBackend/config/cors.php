@@ -1,16 +1,16 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+   'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'register'],
     'allowed_methods' => ['*'],
     'allowed_origins' => [
-        'https://talib-job.vercel.app', // TON URL PRINCIPALE
-        'http://localhost:5173',        // LOCAL
+        'https://talib-job.vercel.app', 
+        'http://localhost:5173'
     ],
-    // Cette ligne permet d'accepter TOUTES les URLs de test de Vercel (celles avec des codes)
+    // Autorise les URLs de test de Vercel (avec des codes aléatoires)
     'allowed_origins_patterns' => ['#^https://talib-.*\.vercel\.app$#'], 
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,
-    'supports_credentials' => true, // On remet à true pour que tes tokens passent
+    'supports_credentials' => true,
 ];
