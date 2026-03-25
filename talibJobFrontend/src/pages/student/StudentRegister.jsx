@@ -25,7 +25,7 @@ const StudentRegister = () => {
     }
     setLoading(true);
     try {
-      const response = await api.post("/api/etudiant/register", formData);
+      const response = await api.post("/etudiant/register", formData);
       if (response.data.error) {
         alert(response.data.error + " ❌");
       } else if (response.data.success) {
