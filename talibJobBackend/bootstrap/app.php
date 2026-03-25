@@ -11,13 +11,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
         $middleware->trustProxies(at: '*');
         $middleware->statefulApi();
         $middleware->validateCsrfTokens(except: [
             'api/*',
-        ]);
-        $middleware->api(append: [
-            \Illuminate\Http\Middleware\HandleCors::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
