@@ -14,9 +14,9 @@ class MissionController extends Controller
     {
         $query = Mission::with('entreprise')->active();
 
-        if ($request->filled('q'))      $query->search($request->q);
-        if ($request->filled('ville'))  $query->where('lieu', 'like', '%'.$request->ville.'%');
-        if ($request->filled('type'))   $query->where('type', $request->type);
+        if ($request->filled('q'))     $query->search($request->q);
+        if ($request->filled('ville')) $query->where('lieu', 'like', '%'.$request->ville.'%');
+        if ($request->filled('type'))  $query->where('type', $request->type);
 
         $missions = $query->orderByDesc('datePublication')
             ->paginate(9)
@@ -66,7 +66,7 @@ class MissionController extends Controller
         ]);
     }
 
-    // POST /api/etudiant/missions/{id}/postuler  (protégé étudiant)
+    // POST /api/etudiant/missions/{id}/postuler
     public function postuler(Request $request, $id)
     {
         $etudiant = $request->user();
@@ -92,14 +92,21 @@ class MissionController extends Controller
         return response()->json(['success' => 'Candidature envoyée avec succès !'], 201);
     }
 
-    // POST /api/entreprise/missions  (protégé entreprise)
+    // POST /api/entreprise/missions  (publier une offre)
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'titre'       => 'required|string|max:150',
-            'description' => 'required|string',
-            'type'        => 'required|string',
-            'lieu'        => 'required|string|max:100',
+            'titre'        => 'required|string|max:150',
+            'description'  => 'required|string',
+            'type'         => 'required|string|max:50',
+            'lieu'         => 'required|string|max:100',
+            'remuneration' => 'nullable|numeric|min:0',
+        ], [
+            'titre.required'       => 'Le titre est obligatoire.',
+            'description.required' => 'La description est obligatoire.',
+            'type.required'        => 'Le type de contrat est obligatoire.',
+            'lieu.required'        => 'Le lieu est obligatoire.',
+            'remuneration.min'     => 'La rémunération ne peut pas être négative.',
         ]);
 
         if ($validator->fails()) {
@@ -111,14 +118,11 @@ class MissionController extends Controller
             'titre'               => $request->titre,
             'description'         => $request->description,
             'type'                => $request->type,
-            'competencesRequises' => $request->competencesRequises,
-            'remuneration'        => $request->remuneration,
+            'competencesRequises' => $request->competencesRequises ?? null,
+            'remuneration'        => $request->remuneration ? abs((float)$request->remuneration) : null,
             'lieu'                => $request->lieu,
-            'duree'               => $request->duree,
-            'dateDebut'           => $request->dateDebut,
-            'dateFin'             => $request->dateFin,
-            'statut'              => $request->statut ?? 'brouillon',
-            'datePublication'     => ($request->statut === 'active') ? now() : null,
+            'statut'              => 'active',
+            'datePublication'     => now(),
             'dateCreation'        => now(),
             'dateModification'    => now(),
         ]);
@@ -126,7 +130,7 @@ class MissionController extends Controller
         return response()->json(['success' => 'Offre publiée !', 'mission' => $mission], 201);
     }
 
-    // GET /api/entreprise/missions  (mes offres - protégé entreprise)
+    // GET /api/entreprise/missions
     public function mesOffres(Request $request)
     {
         $offres = Mission::where('idEntreprise', $request->user()->id)
