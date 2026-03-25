@@ -29,7 +29,7 @@ const CompanyRegister = () => {
     }
     setLoading(true);
     try {
-      const response = await api.post("/api/entreprise/register", {
+      const response = await api.post("/entreprise/register", {
         nomEntreprise: formData.nomEntreprise,
         email: formData.email,
         motDePasse: formData.motDePasse,

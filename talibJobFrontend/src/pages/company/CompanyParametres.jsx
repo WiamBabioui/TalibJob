@@ -50,7 +50,7 @@ export default function CompanyParametres() {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await api.delete("/api/entreprise/compte");
+      await api.delete("/entreprise/compte");
       localStorage.removeItem("token");
       localStorage.removeItem("entreprise");
       navigate("/company/login");

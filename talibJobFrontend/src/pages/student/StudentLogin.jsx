@@ -36,7 +36,7 @@ const StudentLogin = () => {
     setLoading(true);
 
     try {
-      const response = await api.post("/api/etudiant/login", { email, motDePasse });
+      const response = await api.post("/etudiant/login", { email, motDePasse });
 
       if (response.data.error) {
         // ici on peut essayer de détecter si l'erreur concerne email ou mot de passe

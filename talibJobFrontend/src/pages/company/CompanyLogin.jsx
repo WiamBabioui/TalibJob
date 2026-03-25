@@ -35,7 +35,7 @@ const CompanyLogin = () => {
     setLoading(true);
 
     try {
-      const response = await api.post("/api/entreprise/login", {
+      const response = await api.post("/entreprise/login", {
         email,
         motDePasse
       });
