@@ -1,7 +1,0 @@
-[build]
-buildCommand = "composer install --optimize-autoloader --no-dev"
-
-[build.env]
-APP_ENV = "production"
-APP_DEBUG = "false"
-DB_CONNECTION = "mysql"
