@@ -2,18 +2,26 @@
 
 return [
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie', '*'],
+    /*
+    |--------------------------------------------------------------------------
+    | Cross-Origin Resource Sharing (CORS) Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure your settings for cross-origin resource sharing
+    | or "CORS". This determines what cross-origin operations may execute
+    | in web browsers. You are free to adjust these settings as needed.
+    |
+    */
+
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://talib-job.vercel.app',
-        'http://localhost:5173'
+        'https://talibjob-production.up.railway.app',
     ],
 
-    'allowed_origins_patterns' => [
-        '#^https://.*\.vercel\.app$#'
-    ],
+    'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 
@@ -21,6 +29,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];
