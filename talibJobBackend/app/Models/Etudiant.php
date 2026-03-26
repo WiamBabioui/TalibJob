@@ -10,31 +10,41 @@ class Etudiant extends Authenticatable
 {
     use HasApiTokens, HasFactory;
 
-    protected $table      = 'Etudiant';  // Nom exact de la table SQL
-    public $timestamps    = false;        // On gère dateInscription/dateModification manuellement
+    protected $table = 'Etudiant';
+    public $timestamps = false;
 
     protected $fillable = [
-        'nom', 'prenom', 'email', 'motDePasse',
-        'telephone', 'cv', 'competences', 'photoProfil',
-        'statut', 'dernierLogin',
+        'nom',
+        'prenom',
+        'email',
+        'motDePasse',
+        'telephone',
+        'cv',
+        'competences',
+        'photoProfil',
+        'statut',
+        'dernierLogin',
+        'dateInscription',
+        'dateModification'
     ];
 
     protected $hidden = [
-        'motDePasse', 'tokenVerification', 'tokenResetPassword',
+        'motDePasse',
+        'tokenVerification',
+        'tokenResetPassword'
     ];
 
     protected $casts = [
         'emailVerifie' => 'boolean',
-        'dernierLogin' => 'datetime',
+        'dernierLogin' => 'datetime'
     ];
 
-    // Sanctum utilise getAuthPassword() pour vérifier le mot de passe
-    public function getAuthPassword(): string
+    public function getAuthPassword()
     {
         return $this->motDePasse;
     }
 
-    // ──────────────────────── Relations ────────────────────────
+    // Relations
 
     public function candidatures()
     {
@@ -46,23 +56,30 @@ class Etudiant extends Authenticatable
         return $this->hasMany(Message::class, 'idEtudiant');
     }
 
-    // ──────────────────────── Accesseurs ────────────────────────
+    // Accessor compétences
 
-    // Retourne les compétences sous forme de tableau
-    public function getCompetencesArrayAttribute(): array
+    public function getCompetencesArrayAttribute()
     {
         if (!$this->competences) return [];
-        return array_values(array_filter(array_map('trim', explode(',', $this->competences))));
+
+        return array_values(
+            array_filter(
+                array_map('trim', explode(',', $this->competences))
+            )
+        );
     }
 
-    // Calcule la progression du profil (0 à 100%)
-    public function getProgressionAttribute(): int
+    // Progression profil
+
+    public function getProgressionAttribute()
     {
         $score = 0;
-        if ($this->photoProfil)                              $score += 25;
-        if ($this->cv)                                       $score += 25;
-        if ($this->competences)                              $score += 25;
-        if ($this->telephone)                                $score += 25;
+
+        if ($this->photoProfil) $score += 25;
+        if ($this->cv) $score += 25;
+        if ($this->competences) $score += 25;
+        if ($this->telephone) $score += 25;
+
         return $score;
     }
 }
