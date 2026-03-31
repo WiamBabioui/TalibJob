@@ -1,7 +1,10 @@
 [build]
-buildCommand = "composer install --optimize-autoloader --no-dev"
+buildCommand = "composer install --optimize-autoloader --no-dev && php artisan config:cache && php artisan route:cache"
 
 [build.env]
 APP_ENV = "production"
 APP_DEBUG = "false"
 DB_CONNECTION = "mysql"
+
+[deploy]
+startCommand = "vendor/bin/heroku-php-apache2 public/"

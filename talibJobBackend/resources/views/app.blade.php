@@ -2,12 +2,13 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaliJob</title>
-    <link rel="stylesheet" href="/assets/index-BzhAWTkw.css">
+    <link rel="stylesheet" crossorigin href="/assets/index-CM948ZoN.css">
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/assets/index-hyYYgH6y.js"></script>
+    <script type="module" crossorigin src="/assets/index-DOEFd2rf.js"></script>
   </body>
 </html>

@@ -9,13 +9,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         api: __DIR__.'/../routes/api.php',
         apiPrefix: 'api',
+        web: __DIR__.'/../routes/web.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Activer CORS en premier
         $middleware->prepend(HandleCors::class);
-
-        // Désactiver CSRF pour toutes les routes API
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);
@@ -23,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
             if ($request->is('api/*')) {
-                return response()->json(['error' => 'Non authentifié.'], 401);
+                return response()->json(['error' => 'Non authentifie.'], 401);
             }
         });
         $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, $request) {
