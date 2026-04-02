@@ -25,6 +25,7 @@ export default function MonProfil() {
         setForm({
           nom:         r.data.nom         || "",
           prenom:      r.data.prenom      || "",
+          poste:       r.data.poste       || "",
           telephone:   r.data.telephone   || "",
           competences: (r.data.competences || []).join(", "),
         });
@@ -43,6 +44,7 @@ export default function MonProfil() {
       setForm({
         nom:         r.data.nom         || "",
         prenom:      r.data.prenom      || "",
+        poste:       r.data.poste       || "",
         telephone:   r.data.telephone   || "",
         competences: (r.data.competences || []).join(", "),
       });
@@ -56,20 +58,33 @@ export default function MonProfil() {
   };
 
   const handlePhotoChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append("photo", file);
-    try {
-      const r = await api.post("/etudiant/upload-photo", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      setProfil(prev => ({ ...prev, photoProfil: r.data.photo }));
-      setMessage({ type: "success", text: "Photo mise à jour ✅" });
-    } catch {
-      setMessage({ type: "danger", text: "Erreur lors de l'upload de la photo." });
-    }
-  };
+  const file = e.target.files[0];
+  if (!file) return;
+  const formData = new FormData();
+  formData.append("photo", file);
+  try {
+    const r = await api.post("/etudiant/upload-photo", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    // ✅ Met à jour le state local
+    setProfil(prev => ({ ...prev, photoProfil: r.data.photo }));
+
+    // ✅ Met à jour le localStorage pour la sidebar
+    const etudiantActuel = JSON.parse(localStorage.getItem("etudiant") || "{}");
+    localStorage.setItem("etudiant", JSON.stringify({
+      ...etudiantActuel,
+      photoProfil: r.data.photo,
+    }));
+
+    // ✅ Notifie MainLayout
+    window.dispatchEvent(new Event("etudiant-updated"));
+
+    setMessage({ type: "success", text: "Photo mise à jour ✅" });
+  } catch {
+    setMessage({ type: "danger", text: "Erreur lors de l'upload de la photo." });
+  }
+};
 
   const handleCvChange = async (e) => {
     const file = e.target.files[0];
@@ -135,16 +150,28 @@ export default function MonProfil() {
         <div className="col-md-3">
           <div className="card p-4 text-center" style={{ borderRadius: 14, border: "1px solid #e8eaf0" }}>
 
-            {/* Avatar initiale */}
-            <div style={{
+            {/* Avatar photo ou initiale */}
+        {profil?.photoProfil ? (
+          <img
+            src={profil.photoProfil}
+            alt="Photo de profil"
+            style={{
               width: 96, height: 96, borderRadius: "50%",
-              background: bgColor, color: textColor,
-              fontWeight: 800, fontSize: 38,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 12px",
-            }}>
-              {initial}
-            </div>
+              objectFit: "cover", margin: "0 auto 12px",
+              display: "block", border: "3px solid #e8eaf0",
+            }}
+          />
+        ) : (
+          <div style={{
+            width: 96, height: 96, borderRadius: "50%",
+            background: bgColor, color: textColor,
+            fontWeight: 800, fontSize: 38,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 12px",
+          }}>
+            {initial}
+          </div>
+        )}
 
             <div className="fw-bold" style={{ fontSize: 15 }}>{fullName}</div>
             <div className="text-muted" style={{ fontSize: 12, marginBottom: 16 }}>{profil?.email}</div>
@@ -196,6 +223,7 @@ export default function MonProfil() {
                   {[
                     { label: "Prénom",    value: profil?.prenom    },
                     { label: "Nom",       value: profil?.nom       },
+                    { label: "Poste",     value: profil?.poste     },
                     { label: "Email",     value: profil?.email     },
                     { label: "Téléphone", value: profil?.telephone },
                   ].map(f => (
@@ -236,6 +264,12 @@ export default function MonProfil() {
                       value={form.nom} onChange={e => setForm({ ...form, nom: e.target.value })} />
                   </div>
                 </div>
+                <div className="mb-3">
+  <label className="form-label fw-semibold small">Poste</label>
+  <input type="text" className="form-control" style={{ borderRadius: 8 }}
+    placeholder="Ex: Développeur Web, Designer..."
+    value={form.poste} onChange={e => setForm({ ...form, poste: e.target.value })} />
+</div>
                 <div className="mb-3">
                   <label className="form-label fw-semibold small">Téléphone</label>
                   <input type="text" className="form-control" style={{ borderRadius: 8 }}

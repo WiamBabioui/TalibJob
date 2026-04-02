@@ -34,7 +34,7 @@ export default function CompanyParametres() {
         return;
       }
 
-      const response = await api.put("/api/entreprise/parametres", payload);
+      const response = await api.put("/entreprise/parametres", payload);
       const stored = JSON.parse(localStorage.getItem("entreprise") || "{}");
       localStorage.setItem("entreprise", JSON.stringify({ ...stored, ...response.data.entreprise }));
       setOriginal(f => ({ ...f, ...payload, newPassword: "" }));
@@ -50,7 +50,7 @@ export default function CompanyParametres() {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await api.delete("/api/entreprise/compte");
+      await api.delete("/entreprise/compte");
       localStorage.removeItem("token");
       localStorage.removeItem("entreprise");
       navigate("/company/login");

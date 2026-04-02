@@ -29,8 +29,8 @@ export default function MesOffres() {
   const entreprise = JSON.parse(localStorage.getItem("entreprise") || "{}");
 
   useEffect(() => {
-    api.get("/api/entreprise/missions")
-      .then(r => setOffres(r.data))
+    api.get("/entreprise/missions")
+      .then(r => setOffres(Array.isArray(r.data) ? r.data : []))
       .catch(e => { if (e.response?.status === 401) navigate("/company/login"); })
       .finally(() => setLoading(false));
   }, []);

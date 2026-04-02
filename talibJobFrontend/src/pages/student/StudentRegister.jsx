@@ -65,20 +65,9 @@ const StudentRegister = () => {
           </div>
         </div>
 
-        {/* Boutons sociaux */}
-        <button className="btn btn-outline-secondary w-100 mb-2">
-          <FaGoogle className="me-2" /> Continuer avec Google
-        </button>
-        <button className="btn btn-outline-secondary w-100 mb-2">
-          <FaLinkedin className="me-2" /> Continuer avec LinkedIn
-        </button>
-        <button className="btn btn-outline-secondary w-100 mb-3">
-          <FaApple className="me-2" /> Continuer avec Apple
-        </button>
+        
 
-        <div className="d-flex align-items-center mb-3">
-          <hr className="flex-fill" /><span className="px-2 text-muted small">ou</span><hr className="flex-fill" />
-        </div>
+       
 
         <input type="text" name="nom" className="form-control mb-2" placeholder="Nom" value={formData.nom} onChange={handleChange} />
         <input type="text" name="prenom" className="form-control mb-2" placeholder="Prénom" value={formData.prenom} onChange={handleChange} />

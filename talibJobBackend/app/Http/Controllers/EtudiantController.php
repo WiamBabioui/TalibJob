@@ -61,6 +61,7 @@ class EtudiantController extends Controller
                     'id'          => $etudiant->id,
                     'nom'         => $etudiant->nom,
                     'prenom'      => $etudiant->prenom,
+                    'poste'       => $e->poste,
                     'email'       => $etudiant->email,
                     'telephone'   => $etudiant->telephone,
                     'competences' => $etudiant->competences_array,
@@ -104,6 +105,7 @@ class EtudiantController extends Controller
             'id'          => $e->id,
             'nom'         => $e->nom,
             'prenom'      => $e->prenom,
+            'poste'       => $e->poste,
             'email'       => $e->email,
             'telephone'   => $e->telephone,
             'competences' => $e->competences_array,
@@ -121,6 +123,7 @@ class EtudiantController extends Controller
         $validator = Validator::make($request->all(), [
             'nom'         => 'sometimes|string|max:100',
             'prenom'      => 'sometimes|string|max:100',
+            'poste'       => 'sometimes|string|max:100',
             'telephone'   => 'sometimes|string|max:20',
             'competences' => 'sometimes|string',
         ]);
@@ -131,7 +134,7 @@ class EtudiantController extends Controller
 
         $request->user()->update(
             array_merge(
-                $request->only(['nom', 'prenom', 'telephone', 'competences']),
+                $request->only(['nom' , 'poste', 'prenom', 'telephone', 'competences']),
                 ['dateModification' => now()]
             )
         );

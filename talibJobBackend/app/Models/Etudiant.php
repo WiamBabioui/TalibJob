@@ -14,7 +14,7 @@ class Etudiant extends Authenticatable
     public $timestamps    = false;        // On gère dateInscription/dateModification manuellement
 
     protected $fillable = [
-        'nom', 'prenom', 'email', 'motDePasse',
+        'nom', 'prenom', 'email','poste',  'motDePasse',
         'telephone', 'cv', 'competences', 'photoProfil',
         'statut', 'dernierLogin',
     ];

@@ -71,25 +71,9 @@ const CompanyLogin = () => {
           <p className="text-muted small">Connectez-vous ou créez votre compte d'entreprise</p>
         </div>
 
-        {/* Boutons sociaux */}
-        <button className="btn btn-outline-secondary w-100 mb-2">
-          <FaGoogle className="me-2" /> Continuer avec Google
-        </button>
+        
 
-        <button className="btn btn-outline-secondary w-100 mb-2">
-          <FaLinkedin className="me-2" /> Continuer avec LinkedIn
-        </button>
-
-        <button className="btn btn-outline-secondary w-100 mb-3">
-          <FaApple className="me-2" /> Continuer avec Apple
-        </button>
-
-        <div className="d-flex align-items-center mb-3">
-          <hr className="flex-fill" />
-          <span className="px-2 text-muted small">OU</span>
-          <hr className="flex-fill" />
-        </div>
-
+        
         {/* Email */}
         <label className="form-label">Adresse e-mail</label>
 

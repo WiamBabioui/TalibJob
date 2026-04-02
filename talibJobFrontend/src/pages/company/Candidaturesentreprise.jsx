@@ -35,8 +35,8 @@ export default function CandidaturesEntreprise() {
 
   useEffect(() => {
     Promise.all([
-      api.get(`/api/entreprise/missions/${id}`),
-      api.get(`/api/entreprise/missions/${id}/candidatures`),
+      api.get(`/entreprise/missions/${id}`),
+      api.get(`/entreprise/missions/${id}/candidatures`),
     ])
       .then(([offreRes, candRes]) => {
         setOffre(offreRes.data);
@@ -53,7 +53,7 @@ export default function CandidaturesEntreprise() {
     setUpdatingId(candidatureId);
     setMessage(null);
     try {
-      await api.put(`/api/entreprise/candidatures/${candidatureId}/statut`, { statut: newStatut });
+      await api.put(`/entreprise/candidatures/${candidatureId}/statut`, { statut: newStatut });
       setCandidatures(prev =>
         prev.map(c => c.id === candidatureId ? { ...c, statut: newStatut } : c)
       );

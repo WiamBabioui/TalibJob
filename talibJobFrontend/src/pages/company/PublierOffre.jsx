@@ -44,7 +44,7 @@ export default function PublierOffre() {
 
     setLoading(true);
     try {
-      await api.post("/api/entreprise/missions", {
+      await api.post("/entreprise/missions", {
         titre:               form.titre,
         description:         form.description,
         competencesRequises: form.competencesRequises,

@@ -87,14 +87,19 @@ export default function MainLayout() {
         {/* Avatar */}
         <div className={`d-flex align-items-center p-3 border-bottom ${!sidebarOpen ? "justify-content-center" : ""}`}>
           <div style={{ position: "relative", flexShrink: 0 }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: "50%",
-              background: bgColor, color: textColor,
-              fontWeight: 700, fontSize: 18,
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              {initial}
-            </div>
+            {etudiant.photoProfil ? (
+  <img src={etudiant.photoProfil} alt="avatar"
+    style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover" }} />
+) : (
+  <div style={{
+    width: 44, height: 44, borderRadius: "50%",
+    background: bgColor, color: textColor,
+    fontWeight: 700, fontSize: 18,
+    display: "flex", alignItems: "center", justifyContent: "center",
+  }}>
+    {initial}
+  </div>
+)}
             <span style={{
               position: "absolute", bottom: 2, right: 2,
               width: 10, height: 10, background: "#22c55e",
@@ -182,18 +187,31 @@ export default function MainLayout() {
           </div>
 
           {/* Avatar droite */}
-          <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
-            <div onClick={() => navigate("/profil")} title={fullName}
-              style={{
-                width: 34, height: 34, borderRadius: "50%",
-                background: bgColor, color: textColor,
-                fontWeight: 700, fontSize: 14,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer",
-              }}>
-              {initial}
-            </div>
-          </div>
+<div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+  {etudiant.photoProfil ? (
+    <img
+      src={etudiant.photoProfil}
+      alt="avatar"
+      onClick={() => navigate("/profil")}
+      style={{
+        width: 34, height: 34, borderRadius: "50%",
+        objectFit: "cover", cursor: "pointer",
+        border: "2px solid #e8eaf0",
+      }}
+    />
+  ) : (
+    <div onClick={() => navigate("/profil")} title={fullName}
+      style={{
+        width: 34, height: 34, borderRadius: "50%",
+        background: bgColor, color: textColor,
+        fontWeight: 700, fontSize: 14,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        cursor: "pointer",
+      }}>
+      {initial}
+    </div>
+  )}
+</div>
         </nav>
 
         {/* Page content */}

@@ -16,7 +16,7 @@ export default function CompanyDashboard() {
   const entreprise = JSON.parse(localStorage.getItem("entreprise") || "{}");
 
   useEffect(() => {
-    api.get("/api/entreprise/dashboard")
+    api.get("/entreprise/dashboard")
       .then(r => setData(r.data))
       .catch(e => { if (e.response?.status === 401) navigate("/company/login"); })
       .finally(() => setLoading(false));

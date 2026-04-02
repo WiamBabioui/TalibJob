@@ -167,17 +167,7 @@ const StudentLogin = () => {
           {loading ? "Connexion..." : "Se connecter"}
         </button>
 
-        {/* Divider */}
-        <div className="d-flex align-items-center mb-3">
-          <hr className="flex-fill" />
-          <span className="px-2 text-muted small">OU</span>
-          <hr className="flex-fill" />
-        </div>
-
-        {/* Google login */}
-        <button className="btn btn-outline-secondary w-100">
-          <i className="bi bi-google me-2"></i>Se connecter avec Google
-        </button>
+        
 
         <p className="text-center text-muted mt-3" style={{ fontSize: "12px" }}>
           En continuant, vous acceptez les{" "}

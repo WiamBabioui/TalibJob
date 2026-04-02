@@ -9,6 +9,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" crossorigin src="/assets/index-DOEFd2rf.js"></script>
+    <script type="module" crossorigin src="/assets/index-DNeuWMpt.js"></script>
   </body>
 </html>
