@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
-import logo from "../../img/logotalibo.jpeg";
+import logo from "../../img/logoFinalTalibJob.png";
 
 const StudentLogin = () => {
   const [email, setEmail] = useState("");
@@ -75,11 +75,13 @@ const StudentLogin = () => {
       >
         {/* Logo */}
         <div className="text-center mb-4">
-          <img
-            src={logo}
-            alt="Logo"
-            style={{ width: "60px", borderRadius: "8px" }}
-          />
+          <div className="d-flex justify-content-center">
+            <img
+              src={logo}
+              alt="Logo"
+              style={{ width: "60px", borderRadius: "8px" }}
+            />
+          </div>
           <h5 className="fw-bold mt-2" style={{ color: "#007bff" }}>
             TALIB-JOB
           </h5>
@@ -166,8 +168,6 @@ const StudentLogin = () => {
         >
           {loading ? "Connexion..." : "Se connecter"}
         </button>
-
-        
 
         <p className="text-center text-muted mt-3" style={{ fontSize: "12px" }}>
           En continuant, vous acceptez les{" "}

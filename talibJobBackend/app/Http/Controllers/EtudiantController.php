@@ -61,12 +61,16 @@ class EtudiantController extends Controller
                     'id'          => $etudiant->id,
                     'nom'         => $etudiant->nom,
                     'prenom'      => $etudiant->prenom,
-                    'poste'       => $e->poste,
+                    'poste'       => $etudiant->poste, // ✅ CORRIGÉ
                     'email'       => $etudiant->email,
                     'telephone'   => $etudiant->telephone,
                     'competences' => $etudiant->competences_array,
-                    'photoProfil' => $etudiant->photoProfil,
-                    'cv'          => $etudiant->cv,
+                    'photoProfil' => $etudiant->photoProfil 
+                        ? asset('storage/' . $etudiant->photoProfil) 
+                        : null,
+                    'cv'          => $etudiant->cv 
+                        ? asset('storage/' . $etudiant->cv) 
+                        : null,
                 ],
                 'offres'      => $offres,
                 'activite'    => $activite,
@@ -76,31 +80,11 @@ class EtudiantController extends Controller
         ]);
     }
 
-    // GET /api/etudiant/candidatures
-    public function mesCandidatures(Request $request)
-    {
-        $candidatures = Candidature::with(['mission.entreprise'])
-            ->where('idEtudiant', $request->user()->id)
-            ->orderByDesc('dateEnvoi')
-            ->get()
-            ->map(fn($c) => [
-                'id'         => $c->id,
-                'missionId'  => $c->idMission,
-                'poste'      => $c->mission->titre,
-                'entreprise' => $c->mission->entreprise->nom,
-                'lieu'       => $c->mission->lieu,
-                'date'       => $c->dateEnvoi->format('d/m/Y'),
-                'statut'     => $c->statut,
-                'lettreMotivation' => $c->lettreMotivation,
-            ]);
-
-        return response()->json($candidatures);
-    }
-
     // GET /api/etudiant/profil
     public function profil(Request $request)
     {
         $e = $request->user();
+
         return response()->json([
             'id'          => $e->id,
             'nom'         => $e->nom,
@@ -109,10 +93,12 @@ class EtudiantController extends Controller
             'email'       => $e->email,
             'telephone'   => $e->telephone,
             'competences' => $e->competences_array,
-            'photoProfil' => $e->photoProfil
-                ? asset('storage/' . $e->photoProfil)
+            'photoProfil' => $e->photoProfil 
+                ? asset('storage/' . $e->photoProfil) 
                 : null,
-            'cv'          => $e->cv,
+            'cv'          => $e->cv 
+                ? asset('storage/' . $e->cv) 
+                : null,
             'progression' => $e->progression,
         ]);
     }
@@ -134,7 +120,7 @@ class EtudiantController extends Controller
 
         $request->user()->update(
             array_merge(
-                $request->only(['nom' , 'poste', 'prenom', 'telephone', 'competences']),
+                $request->only(['nom', 'prenom', 'poste', 'telephone', 'competences']),
                 ['dateModification' => now()]
             )
         );
@@ -142,67 +128,43 @@ class EtudiantController extends Controller
         return response()->json(['success' => 'Profil mis à jour !']);
     }
 
-    // PUT /api/etudiant/parametres
-    public function parametres(Request $request)
-    {
-        $etudiant = $request->user();
-
-        $validator = Validator::make($request->all(), [
-            'nom'         => 'sometimes|string|max:100',
-            'prenom'      => 'sometimes|string|max:100',  // ✅ ajouté
-            'email'       => 'sometimes|email|unique:Etudiant,email,' . $etudiant->id,
-            'telephone'   => 'sometimes|string|max:20',
-            'newPassword' => 'sometimes|string|min:6',
-        ], [
-            'email.unique' => 'Cet email est déjà utilisé.',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()->first()], 422);
-        }
-
-        // ✅ inclure prenom dans la mise à jour
-        $data = $request->only(['nom', 'prenom', 'email', 'telephone']);
-        $data['dateModification'] = now();
-
-        if ($request->filled('newPassword')) {
-            $data['motDePasse'] = Hash::make($request->newPassword);
-        }
-
-        $etudiant->update($data);
-
-        return response()->json(['success' => 'Paramètres enregistrés !']);
-    }
-
-    // POST /api/etudiant/upload-cv
+    // POST upload CV
     public function uploadCv(Request $request)
     {
         $request->validate(['cv' => 'required|file|mimes:pdf|max:5120']);
 
         $path = $request->file('cv')->store('cvs', 'public');
+
         $request->user()->update([
             'cv'               => $path,
             'dateModification' => now(),
         ]);
 
-        return response()->json(['success' => 'CV uploadé !', 'cv' => $path]);
+        return response()->json([
+            'success' => 'CV uploadé !',
+            'cv'      => asset('storage/' . $path) // ✅ URL directe
+        ]);
     }
 
-    // POST /api/etudiant/upload-photo
+    // POST upload photo
     public function uploadPhoto(Request $request)
     {
         $request->validate(['photo' => 'required|image|max:2048']);
 
         $path = $request->file('photo')->store('photos', 'public');
+
         $request->user()->update([
             'photoProfil'      => $path,
             'dateModification' => now(),
         ]);
 
-        return response()->json(['success' => 'Photo mise à jour !', 'photo' => asset('storage/' . $path)]);
+        return response()->json([
+            'success' => 'Photo mise à jour !',
+            'photo'   => asset('storage/' . $path) // ✅ URL directe
+        ]);
     }
 
-    // GET /api/etudiant/download-cv
+    // Télécharger CV
     public function downloadCv(Request $request)
     {
         $etudiant = $request->user();
@@ -217,16 +179,9 @@ class EtudiantController extends Controller
             return response()->json(['error' => 'Fichier introuvable.'], 404);
         }
 
-        return response()->download($path, 'CV_' . $etudiant->nom . '_' . $etudiant->prenom . '.pdf');
-    }
-
-    // DELETE /api/etudiant/compte
-    public function supprimerCompte(Request $request)
-    {
-        $etudiant = $request->user();
-        $etudiant->tokens()->delete();
-        $etudiant->delete();
-
-        return response()->json(['success' => 'Compte supprimé.']);
+        return response()->download(
+            $path,
+            'CV_' . $etudiant->nom . '_' . $etudiant->prenom . '.pdf'
+        );
     }
 }

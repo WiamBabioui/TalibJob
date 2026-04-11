@@ -1,22 +1,81 @@
-.footer {
-  background-color: #f8f9fa;
-}
+/* ============================================================
+   FOOTER — Ajouts à coller à la fin de talib-job.css
+   ============================================================ */
 
-.footer-section h5 {
-  font-weight: 700;
-  margin-bottom: 15px;
-}
-
-.footer-section p {
-  margin-bottom: 8px;
-}
-
-.footer-section a {
+/* Boutons réseaux sociaux (carrés avec hover orange) */
+.footer-social a {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 16px;
+  transition: all var(--transition);
   text-decoration: none;
-  color: #007bff;
-  transition: color 0.2s;
+}
+.footer-social a:hover {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: var(--white);
+  transform: translateY(-2px);
 }
 
-.footer-section a:hover {
-  color: #0056b3;
+/* Badge au-dessus des titres de colonnes */
+.footer-col-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--orange);
+  background: var(--orange-light);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Titres des colonnes en majuscules */
+.footer-col h5 {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Liens avec point orange au hover */
+.footer-col a {
+  display: block;
+  font-size: 14px;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: 11px;
+  transition: color var(--transition), padding-left var(--transition);
+  position: relative;
+}
+.footer-col a::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--orange);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.footer-col a:hover {
+  color: var(--blue);
+  padding-left: 10px;
+}
+.footer-col a:hover::before {
+  opacity: 1;
 }

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import logo from "../img/logotalibo-removebg-preview.png";
+import logo from "../img/logoFinalTalibJob-removebg-preview.png";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./CompanyLayout.css";
 

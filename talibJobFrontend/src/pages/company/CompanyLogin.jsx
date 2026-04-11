@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaGoogle, FaLinkedin, FaApple } from "react-icons/fa";
 import api from "../../services/api";
-import logo from "../../img/logotalibo.jpeg";
+import logo from "../../img/logoFinalTalibJob.png";
 
 const CompanyLogin = () => {
   const [email, setEmail] = useState("");
@@ -37,17 +37,19 @@ const CompanyLogin = () => {
     try {
       const response = await api.post("/entreprise/login", {
         email,
-        motDePasse
+        motDePasse,
       });
 
       if (response.data.error) {
         setEmailError(response.data.error);
       } else if (response.data.success) {
         localStorage.setItem("token", response.data.token);
-        localStorage.setItem("entreprise", JSON.stringify(response.data.entreprise));
+        localStorage.setItem(
+          "entreprise",
+          JSON.stringify(response.data.entreprise),
+        );
         navigate("/company/dashboard");
       }
-
     } catch (error) {
       if (error.response?.data?.error) {
         setEmailError(error.response.data.error);
@@ -60,20 +62,32 @@ const CompanyLogin = () => {
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center bg-light" style={{ minHeight: "100vh" }}>
-      <div className="card p-4 shadow-sm" style={{ width: "420px", borderRadius: "16px" }}>
-
+    <div
+      className="d-flex justify-content-center align-items-center bg-light"
+      style={{ minHeight: "100vh" }}
+    >
+      <div
+        className="card p-4 shadow-sm"
+        style={{ width: "420px", borderRadius: "16px" }}
+      >
         {/* Logo */}
         <div className="text-center mb-4">
-          <img src={logo} alt="Logo" style={{ width: "60px", borderRadius: "8px" }} />
-          <h5 className="fw-bold mt-2" style={{ color: "#007bff" }}>TALIB-JOB</h5>
+          <div className="d-flex justify-content-center">
+            <img
+              src={logo}
+              alt="Logo"
+              style={{ width: "60px", borderRadius: "8px" }}
+            />
+          </div>{" "}
+          <h5 className="fw-bold mt-2" style={{ color: "#007bff" }}>
+            TALIB-JOB
+          </h5>
           <h4 className="mt-1 fw-bold">Espace Entreprise</h4>
-          <p className="text-muted small">Connectez-vous ou créez votre compte d'entreprise</p>
+          <p className="text-muted small">
+            Connectez-vous ou créez votre compte d'entreprise
+          </p>
         </div>
 
-        
-
-        
         {/* Email */}
         <label className="form-label">Adresse e-mail</label>
 
@@ -108,31 +122,41 @@ const CompanyLogin = () => {
           </p>
         )}
 
-        <small className="text-muted d-block mb-2">
-          Minimum 8 caractères
-        </small>
+        <small className="text-muted d-block mb-2">Minimum 8 caractères</small>
         <Link
           to="/forgot-password"
           className="text-decoration-none small"
-          style={{ color: "#007bff" ,margin:"10px",textAlign:"right"}}
+          style={{ color: "#007bff", margin: "10px", textAlign: "right" }}
         >
           Mot de passe oublié ?
         </Link>
 
-        <button className="btn btn-primary w-100 mb-2" onClick={handleLogin} disabled={loading}>
+        <button
+          className="btn btn-primary w-100 mb-2"
+          onClick={handleLogin}
+          disabled={loading}
+        >
           {loading ? "Connexion..." : "Se connecter"}
         </button>
 
-        <Link to="/company/register" className="btn btn-outline-secondary w-100 mb-3">
+        <Link
+          to="/company/register"
+          className="btn btn-outline-secondary w-100 mb-3"
+        >
           S'inscrire
         </Link>
 
         <p className="text-center text-muted" style={{ fontSize: "12px" }}>
           En vous connectant ou en vous inscrivant, vous acceptez nos{" "}
-          <span style={{ color: "#007bff", cursor: "pointer" }}>Conditions d'utilisation</span> et notre{" "}
-          <span style={{ color: "#007bff", cursor: "pointer" }}>Politique de confidentialité</span>.
+          <span style={{ color: "#007bff", cursor: "pointer" }}>
+            Conditions d'utilisation
+          </span>{" "}
+          et notre{" "}
+          <span style={{ color: "#007bff", cursor: "pointer" }}>
+            Politique de confidentialité
+          </span>
+          .
         </p>
-
       </div>
     </div>
   );

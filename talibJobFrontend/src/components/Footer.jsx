@@ -1,89 +1,111 @@
-import logo from "../img/logotalibo-removebg-preview.png";
+import React from "react";
+import logo from "../img/logoFinalTalibJob.png";
 import { Link } from "react-router-dom";
+import "./Footer.css";
 
 const Footer = () => {
-  const token = localStorage.getItem("token"); // vérifie si connecté
+  const token = localStorage.getItem("token");
+
+  const studentLinks = [
+    { label: "Trouver un Job", to: token ? "/jobs" : "/student/login" },
+    {
+      label: "Mon Tableau de bord",
+      to: token ? "/dashboard" : "/student/login",
+    },
+    {
+      label: "Mes candidatures",
+      to: token ? "/candidatures" : "/student/login",
+    },
+  ];
+
+  const companyLinks = [
+    {
+      label: "Publier une offre",
+      to: token ? "/company/offres/nouvelle" : "/company/login",
+    },
+    {
+      label: "Mon Tableau de bord",
+      to: token ? "/company/dashboard" : "/company/login",
+    },
+    {
+      label: "Recruter des talents",
+      to: token ? "/company/MesOffres" : "/company/login",
+    },
+  ];
+
+  const aboutLinks = [
+    { label: "À propos", to: "/about" },
+    { label: "Contact", to: "/contact" },
+    { label: "FAQ", to: "/faq" },
+    { label: "Mentions légales", to: "/legal" },
+  ];
+
+  const socials = [
+    { icon: "bi-facebook", href: "#" },
+    { icon: "bi-instagram", href: "#" },
+    { icon: "bi-twitter-x", href: "#" },
+    { icon: "bi-linkedin", href: "#" },
+  ];
 
   return (
     <footer className="footer">
       <div className="footer-container">
+        {/* ── Logo + description + réseaux ── */}
         <div className="footer-about">
           <div className="footer-logo">
-            <img src={logo} alt="logo Footer" />
-            <h3>TALIB-JOB</h3>
+            <img src={logo} alt="Talib-Job logo" style={{ width: "55px" }} />
+            <h3 style={{ color: "rgb(28,108,227)" }}>TALIB-JOB</h3>
           </div>
 
           <p className="footer-text">
-            Connecting students with flexible part-time jobs and companies with
-            talent.
+             Mettre en relation les étudiants avec des emplois à temps partiel
+            flexibles et les entreprises à la recherche de talents.
           </p>
 
           <div className="footer-social">
-            <Link style={{ color: "#606060" }}>
-              <i className="bi bi-facebook"></i>
-            </Link>
-            <Link style={{ color: "#606060" }}>
-              <i className="bi bi-instagram"></i>
-            </Link>
-            <Link style={{ color: "#606060" }}>
-              <i className="bi bi-twitter"></i>
-            </Link>
-            <Link style={{ color: "#606060" }}>
-              <i className="bi bi-linkedin"></i>
-            </Link>
+            {socials.map((s) => (
+              <a key={s.icon} href={s.href} aria-label={s.icon}>
+                <i className={`bi ${s.icon}`}></i>
+              </a>
+            ))}
           </div>
         </div>
 
+        {/* ── Colonnes de liens ── */}
         <div className="footer-links">
-          <div>
-            <h5>Pour les étudiants</h5>
-            <p>
-              <Link to={token ? "/jobs" : "/student/login"}>Trouver un Job</Link>
-            </p>
-            <p>
-              <Link to={token ? "/dashboard" : "/student/login"}>Mon Tableau de bord</Link>
-            </p>
-            <p>
-              <Link to={token ? "/candidatures" : "/student/login"}>Mes candidatures</Link>
-            </p>
+          <div className="footer-col">
+            <h5 style={{color:"#ff9800"}}>Pour les étudiants</h5>
+            {studentLinks.map((l) => (
+              <Link key={l.label} to={l.to}>
+                {l.label}
+              </Link>
+            ))}
           </div>
 
-          <div>
-            <h5>Pour les entreprises</h5>
-            <p>
-              <Link to={token ? "/company/offres/nouvelle" : "/company/login"}>Publier une offre</Link>
-            </p>
-            <p>
-              <Link to={token ? "/company/dashboard" : "/company/login"}>Mon Tableau de bord</Link>
-            </p>
-            <p>
-              <Link to={token ? "/company/MesOffres" : "/company/login"}>Recruter des talents</Link>
-            </p>
+          <div className="footer-col">
+            <h5 style={{color:"#ff9800"}}>Pour les entreprises</h5>
+            {companyLinks.map((l) => (
+              <Link key={l.label} to={l.to}>
+                {l.label}
+              </Link>
+            ))}
           </div>
 
-          <div>
-            <h5>TALEB-JOB</h5>
-            <p>
-              <Link to="/about">À propos</Link>
-            </p>
-            <p>
-              <Link to="/contact">Contact</Link>
-            </p>
-            <p>
-              <Link to="/faq">FAQ</Link>
-            </p>
-            <p>
-              <Link to="/legal">Mentions légales</Link>
-            </p>
+          <div className="footer-col">
+            <h5 style={{color:"#ff9800"}}>Talib-Job</h5>
+            {aboutLinks.map((l) => (
+              <Link key={l.label} to={l.to}>
+                {l.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
 
-      <hr />
-
-      <p className="footer-copy">
+      {/* ── Bas de page ── */}
+      <div className="footer-bottom">
         © 2026 <span>Talib-Job</span>. Tous droits réservés.
-      </p>
+      </div>
     </footer>
   );
 };

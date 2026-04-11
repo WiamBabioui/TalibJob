@@ -5,6 +5,8 @@ use App\Http\Controllers\AuthEntrepriseController;
 use App\Http\Controllers\EtudiantController;
 use App\Http\Controllers\EntrepriseController;
 use App\Http\Controllers\MissionController;
+use App\Http\Controllers\AuthController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -71,3 +73,5 @@ Route::middleware('auth:sanctum')->prefix('entreprise')->group(function () {
     Route::get('/missions/{id}/candidatures', [EntrepriseController::class, 'candidaturesMission']);
     Route::put('/candidatures/{id}/statut',   [EntrepriseController::class, 'updateStatut']);
 });
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);

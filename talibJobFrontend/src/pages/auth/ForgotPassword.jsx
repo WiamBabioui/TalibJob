@@ -6,18 +6,37 @@ const ForgotPassword = () => {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = () => {
-    setError("");
-    setMessage("");
+  const handleSubmit = async () => {
+  setError("");
+  setMessage("");
 
-    if (!email) {
-      setError("Veuillez entrer votre email");
-      return;
+  if (!email) {
+    setError("Veuillez entrer votre email");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://127.0.0.1:8000/api/forgot-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      setMessage("Lien généré !");
+      console.log("LINK 👉", data.link); // IMPORTANT
+    } else {
+      setError(data.message);
     }
-
-    // Simulation (plus tard tu connectes avec API)
-    setMessage("Un lien de réinitialisation a été envoyé à votre email.");
-  };
+  } catch (err) {
+    setError("Erreur serveur");
+  }
+};
 
   return (
     <div
