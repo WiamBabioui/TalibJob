@@ -111,13 +111,8 @@ class EntrepriseController extends Controller
     public function supprimerCompte(Request $request)
     {
         $entreprise = $request->user();
-
-        // Révoquer tous les tokens
         $entreprise->tokens()->delete();
-
-        // Supprimer le compte (cascade supprime les missions et candidatures)
         $entreprise->delete();
-
         return response()->json(['success' => 'Compte entreprise supprimé avec succès.']);
     }
 
@@ -133,10 +128,8 @@ class EntrepriseController extends Controller
             ->map(fn($c) => [
                 'id'               => $c->id,
                 'statut'           => $c->statut,
-                'statut_label'     => $c->statut_label,
-                'badgeColor'       => $c->badge_color,
                 'lettreMotivation' => $c->lettreMotivation,
-                'dateEnvoi'        => $c->dateEnvoi->format('d/m/Y'),
+                'date'             => $c->dateEnvoi->format('d/m/Y'),
                 'etudiant'         => [
                     'id'          => $c->etudiant->id,
                     'nom'         => $c->etudiant->nom,
@@ -154,35 +147,63 @@ class EntrepriseController extends Controller
         ]);
     }
 
-    // PUT /api/entreprise/candidatures/{id}/statut
+    // GET /api/entreprise/candidatures (Bouton général)
+    public function toutesLesCandidatures(Request $request)
+    {
+        $entreprise = $request->user();
+        $candidatures = Candidature::with(['etudiant', 'mission'])
+            ->whereHas('mission', fn($q) => $q->where('idEntreprise', $entreprise->id))
+            ->orderByDesc('dateEnvoi')
+            ->get()
+            ->map(fn($c) => [
+                'id'               => $c->id,
+                'statut'           => $c->statut,
+                'lettreMotivation' => $c->lettreMotivation,
+                'date'             => $c->dateEnvoi->format('d/m/Y'),
+                'mission'          => ['titre' => $c->mission->titre],
+                'etudiant'         => [
+                    'id'          => $c->etudiant->id,
+                    'nom'         => $c->etudiant->nom,
+                    'prenom'      => $c->etudiant->prenom,
+                    'email'       => $c->etudiant->email,
+                    'telephone'   => $c->etudiant->telephone,
+                    'competences' => $c->etudiant->competences_array,
+                    'cv'          => $c->etudiant->cv,
+                ],
+            ]);
+
+        return response()->json($candidatures);
+    }
+
+    // ✅ FONCTION AJOUTÉE ET CORRIGÉE
     public function updateStatut(Request $request, $id)
     {
-        $request->validate([
-            'statut'                => 'required|in:vue,acceptee,refusee',
+        $validator = Validator::make($request->all(), [
+            'statut' => 'required|in:vue,acceptee,refusee',
             'commentaireEntreprise' => 'nullable|string',
         ]);
 
-        $candidature = Candidature::whereHas('mission',
-            fn($q) => $q->where('idEntreprise', $request->user()->id)
-        )->findOrFail($id);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 422);
+        }
 
-        $candidature->update([
-            'statut'                => $request->statut,
-            'commentaireEntreprise' => $request->commentaireEntreprise,
-            'dateReponse'           => now(),
-        ]);
+        try {
+            // Vérification que la candidature appartient bien à une mission de cette entreprise
+            $candidature = Candidature::whereHas('mission', function($q) use ($request) {
+                $q->where('idEntreprise', $request->user()->id);
+            })->findOrFail($id);
 
-        return response()->json(['success' => 'Statut mis à jour !']);
+            // Mise à jour manuelle car $timestamps = false dans le modèle
+            $candidature->update([
+                'statut' => $request->statut,
+                'commentaireEntreprise' => $request->commentaireEntreprise,
+                'dateReponse' => now(),
+            ]);
+
+            return response()->json(['success' => 'Statut mis à jour avec succès !']);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erreur lors de la mise à jour : ' . $e->getMessage()], 500);
+        }
     }
-    public function toutesLesCandidatures(Request $request)
-{
-    // Récupère l'entreprise connectée
-    $entreprise = $request->user();
-
-    // Récupère toutes les candidatures liées aux missions de cette entreprise
-    return \App\Models\Candidature::whereIn('mission_id', $entreprise->missions()->pluck('id'))
-        ->with(['etudiant', 'mission']) // 'mission' pour savoir de quel job il s'agit
-        ->latest()
-        ->get();
-}
 }
