@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import api from "../services/api";
 
 // ✅ Utilise une variable d'environnement React
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:8000/api").replace('/api', '');
 
 function avatarColor(name = "") {
   const colors = [
@@ -302,13 +302,17 @@ export default function MonProfil() {
             {/* CV */}
             <div className="d-flex flex-column gap-2 mt-2">
               {cvUrl && (
-                <button
-                  className="btn btn-outline-primary btn-sm"
-                  onClick={() => window.open(cvUrl, "_blank")}
-                >
-                  Télécharger CV
-                </button>
-              )}
+    <a                                          // ← <a> au lieu de <button>
+      href={cvUrl}
+      target="_blank"
+      rel="noreferrer"
+      className="btn btn-outline-primary btn-sm"
+      style={{ borderRadius: 8 }}
+    >
+      <i className="bi bi-download me-1" />
+      Télécharger CV
+    </a>
+  )}
               <label
                 className="btn btn-outline-secondary btn-sm"
                 style={{ borderRadius: 8, cursor: "pointer" }}

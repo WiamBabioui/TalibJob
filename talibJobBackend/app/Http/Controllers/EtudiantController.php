@@ -130,21 +130,21 @@ class EtudiantController extends Controller
 
     // POST upload CV
     public function uploadCv(Request $request)
-    {
-        $request->validate(['cv' => 'required|file|mimes:pdf|max:5120']);
+{
+    $request->validate(['cv' => 'required|file|mimes:pdf|max:5120']);
 
-        $path = $request->file('cv')->store('cvs', 'public');
+    $path = $request->file('cv')->store('cvs', 'public');
+    $request->user()->update([
+        'cv'               => $path,
+        'dateModification' => now(),
+    ]);
 
-        $request->user()->update([
-            'cv'               => $path,
-            'dateModification' => now(),
-        ]);
-
-        return response()->json([
-            'success' => 'CV uploadé !',
-            'cv'      => asset('storage/' . $path) // ✅ URL directe
-        ]);
-    }
+    return response()->json([
+        'success' => 'CV uploadé !',
+        'cv'      => $path,           // chemin relatif
+        'cvUrl'   => asset('storage/' . $path),  // URL complète
+    ]);
+}
 
     // POST upload photo
     public function uploadPhoto(Request $request)
