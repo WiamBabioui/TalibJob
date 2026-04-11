@@ -34,19 +34,25 @@ export default function CandidaturesEntreprise() {
   const [message, setMessage]           = useState(null);
 
   useEffect(() => {
-    Promise.all([
-      api.get(`/entreprise/missions/${id}`),
-      api.get(`/entreprise/missions/${id}/candidatures`),
-    ])
-      .then(([offreRes, candRes]) => {
-        setOffre(offreRes.data);
-        setCandidatures(candRes.data);
-      })
-      .catch(e => {
-        if (e.response?.status === 401) navigate("/company/login");
-      })
-      .finally(() => setLoading(false));
-  }, [id]);
+  setLoading(true);
+  
+  // Si id existe -> une seule mission. Si pas d'id -> toutes les candidatures.
+  const fetchUrl = id 
+    ? api.get(`/entreprise/missions/${id}/candidatures`)
+    : api.get(`/entreprise/candidatures`);
+
+  const fetchOffre = id ? api.get(`/entreprise/missions/${id}`) : Promise.resolve({ data: null });
+
+  Promise.all([fetchOffre, fetchUrl])
+    .then(([offreRes, candRes]) => {
+      setOffre(offreRes.data);
+      setCandidatures(candRes.data);
+    })
+    .catch(e => {
+      if (e.response?.status === 401) navigate("/company/login");
+    })
+    .finally(() => setLoading(false));
+}, [id]);
 
   // Changer le statut d'une candidature
   const handleStatut = async (candidatureId, newStatut) => {

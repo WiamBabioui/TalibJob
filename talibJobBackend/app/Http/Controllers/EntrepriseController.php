@@ -174,4 +174,15 @@ class EntrepriseController extends Controller
 
         return response()->json(['success' => 'Statut mis à jour !']);
     }
+    public function toutesLesCandidatures(Request $request)
+{
+    // Récupère l'entreprise connectée
+    $entreprise = $request->user();
+
+    // Récupère toutes les candidatures liées aux missions de cette entreprise
+    return \App\Models\Candidature::whereIn('mission_id', $entreprise->missions()->pluck('id'))
+        ->with(['etudiant', 'mission']) // 'mission' pour savoir de quel job il s'agit
+        ->latest()
+        ->get();
+}
 }

@@ -62,6 +62,7 @@ Route::middleware('auth:sanctum')->prefix('entreprise')->group(function () {
 
     Route::get('/dashboard', [EntrepriseController::class,    'dashboard']);
     Route::put('/parametres',[EntrepriseController::class,    'parametres']);
+    Route::get('/candidatures', [EntrepriseController::class, 'toutesLesCandidatures']);
     Route::delete('/compte', [EntrepriseController::class,    'supprimerCompte']);
 
     Route::get('/missions',          [MissionController::class,   'mesOffres']);

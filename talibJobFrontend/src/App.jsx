@@ -60,6 +60,7 @@ function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<CompanyDashboard />} />
           <Route path="mesoffres" element={<MesOffres />} />
+          <Route path="candidatures" element={<CandidaturesEntreprise />} />
           <Route path="offres/nouvelle" element={<PublierOffre />} />
           <Route
             path="offres/:id/candidatures"
