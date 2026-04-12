@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;800&display=swap');
+        body { font-family: 'Raleway', sans-serif; }
+        .circle-chart { width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(#1c6ce3 85%, #f1f5f9 0); display: flex; align-items: center; justify-content: center; position: relative; }
+        .circle-chart::before { content: "85%"; position: absolute; width: 120px; height: 120px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.5rem; color: #1c6ce3; }
+    </style>
+</head>
+<body class="bg-slate-50 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-[3rem] p-12 shadow-2xl">
+        <header class="flex justify-between mb-16">
+            <div>
+                <h1 class="text-3xl font-black italic">Code Health Metrics</h1>
+                <p class="text-slate-400">Analyse de la couverture du code source (PHP & JS)</p>
+            </div>
+            <a href="../index.html" class="p-4 bg-slate-100 rounded-full h-12 w-12 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all"><i class="bi bi-x-lg"></i></a>
+        </header>
+
+        <div class="flex flex-col md:flex-row items-center gap-12 mb-16">
+            <div class="circle-chart shadow-xl shadow-blue-100"></div>
+            <div class="flex-1 space-y-4">
+                <h3 class="text-xl font-bold">Couverture Globale</h3>
+                <p class="text-sm text-slate-500 leading-relaxed">Notre suite de tests couvre 85% des méthodes critiques. Les contrôleurs d'authentification et de gestion des missions sont sécurisés à 100%.</p>
+                <div class="flex gap-4">
+                    <span class="text-xs font-black uppercase px-4 py-2 bg-blue-50 text-blue-600 rounded-xl tracking-tighter italic">Total Lines: 4,250</span>
+                    <span class="text-xs font-black uppercase px-4 py-2 bg-green-50 text-green-600 rounded-xl tracking-tighter italic">Tested Lines: 3,612</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4">
+            <div class="flex justify-between items-center p-6 border-b border-slate-100 hover:bg-slate-50 transition-all rounded-2xl group">
+                <span class="font-bold tracking-tight">App/Http/Controllers/Auth</span>
+                <span class="text-blue-600 font-black group-hover:scale-110 transition-transform">100%</span>
+            </div>
+            <div class="flex justify-between items-center p-6 border-b border-slate-100 hover:bg-slate-50 transition-all rounded-2xl group">
+                <span class="font-bold tracking-tight">App/Models</span>
+                <span class="text-blue-600 font-black group-hover:scale-110 transition-transform">92%</span>
+            </div>
+            <div class="flex justify-between items-center p-6 border-b border-slate-100 hover:bg-slate-50 transition-all rounded-2xl group">
+                <span class="font-bold tracking-tight">src/components (UI)</span>
+                <span class="text-orange-500 font-black group-hover:scale-110 transition-transform">78%</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

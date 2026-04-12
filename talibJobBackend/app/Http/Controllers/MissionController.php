@@ -145,4 +145,11 @@ class MissionController extends Controller
 
         return response()->json($offres);
     }
+    // Dans MissionController.php
+public function update(Request $request, $id)
+{
+    $mission = Mission::findOrFail($id);
+    $mission->update($request->all());
+    return response()->json($mission, 200);
+}
 }

@@ -1,0 +1,48 @@
+name: Talib-Job CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # ÉTAPE 1 : TESTS BACKEND
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Install Dependencies
+        run: cd talibJobBackend && composer install
+      - name: Run Migrations & Tests
+        run: |
+          cd talibJobBackend
+          php artisan migrate --force
+          php artisan test
+
+  # ÉTAPE 2 : TESTS FRONTEND
+  frontend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install NPM
+        run: cd talibJobFrontend && npm install
+      - name: Run Jest Tests
+        run: cd talibJobFrontend && npm test
+
+  # ÉTAPE 3 : DEPLOY (Simulation ou Réel sur Vercel/Railway)
+  deploy:
+    needs: [backend-tests, frontend-tests]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy to Production
+        run: echo "🚀 Déploiement automatique vers Talib-Job Server..."
