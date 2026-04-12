@@ -2,29 +2,47 @@ name: Talib-Job CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
 jobs:
-  # ÉTAPE 1 : TESTS BACKEND
+  # --- TESTS BACKEND ---
   backend-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-      - name: Install Dependencies
-        run: cd talibJobBackend && composer install
-      - name: Run Migrations & Tests
+          extensions: mbstring, dom, fileinfo, sqlite, pdo_sqlite
+          coverage: none
+
+      - name: Install Backend Dependencies
         run: |
           cd talibJobBackend
-          php artisan migrate --force
-          php artisan test
+          composer install --prefer-dist --no-ansi --no-interaction --no-progress --no-scripts
 
-  # ÉTAPE 2 : TESTS FRONTEND
+      - name: Prepare Environment
+        run: |
+          cd talibJobBackend
+          cp .env.example .env
+          php artisan key:generate
+          # Créer une base de données SQLite vide pour les tests
+          touch database/database.sqlite 
+
+      - name: Execute Tests
+        run: |
+          cd talibJobBackend
+          # On force l'utilisation de SQLite en mémoire pour que ça marche sur GitHub
+          php artisan test --env=testing
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+
+  # --- TESTS FRONTEND (Qui marchent déjà chez toi) ---
   frontend-tests:
     runs-on: ubuntu-latest
     steps:
@@ -33,16 +51,16 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-      - name: Install NPM
+      - name: Install Frontend Dependencies
         run: cd talibJobFrontend && npm install
       - name: Run Jest Tests
-        run: cd talibJobFrontend && npm test
+        run: cd talibJobFrontend && npm test -- --watchAll=false
 
-  # ÉTAPE 3 : DEPLOY (Simulation ou Réel sur Vercel/Railway)
+  # --- DÉPLOIEMENT (S'active uniquement si Backend + Frontend sont OK) ---
   deploy:
     needs: [backend-tests, frontend-tests]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Deploy to Production
-        run: echo "🚀 Déploiement automatique vers Talib-Job Server..."
+      - name: Deploy Signal
+        run: echo "🚀 Tout est validé ! Prêt pour le déploiement final."
