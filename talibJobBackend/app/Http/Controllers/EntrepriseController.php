@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
+
 class EntrepriseController extends Controller
 {
     // GET /api/entreprise/dashboard
@@ -59,6 +60,24 @@ class EntrepriseController extends Controller
             'stats'      => $stats,
             'offres'     => $offres,
             'activites'  => $activites,
+        ]);
+    }
+
+    // POST /api/entreprise/upload-logo
+    public function uploadLogo(Request $request)
+    {
+        $request->validate(['logo' => 'required|image|max:2048']);
+
+        $path = $request->file('logo')->store('logos', 'public');
+
+        $request->user()->update([
+            'logo'             => $path,
+            'dateModification' => now(),
+        ]);
+
+        return response()->json([
+            'success' => 'Logo mis à jour !',
+            'logo'    => asset('storage/' . $path),
         ]);
     }
 
@@ -138,6 +157,9 @@ class EntrepriseController extends Controller
                     'telephone'   => $c->etudiant->telephone,
                     'competences' => $c->etudiant->competences_array,
                     'cv'          => $c->etudiant->cv,
+                    'photoProfil' => $c->etudiant->photoProfil
+                        ? asset('storage/' . $c->etudiant->photoProfil)
+                        : null,
                 ],
             ]);
 
@@ -169,6 +191,9 @@ class EntrepriseController extends Controller
                     'telephone'   => $c->etudiant->telephone,
                     'competences' => $c->etudiant->competences_array,
                     'cv'          => $c->etudiant->cv,
+                    'photoProfil' => $c->etudiant->photoProfil
+                        ? asset('storage/' . $c->etudiant->photoProfil)
+                        : null,
                 ],
             ]);
 
@@ -206,4 +231,5 @@ class EntrepriseController extends Controller
             return response()->json(['error' => 'Erreur lors de la mise à jour : ' . $e->getMessage()], 500);
         }
     }
+    
 }

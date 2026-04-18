@@ -82,10 +82,18 @@ class AuthEtudiantController extends Controller
             'success'  => 'Connexion réussie !',
             'token'    => $token,
             'etudiant' => [
-                'id'     => $etudiant->id,
-                'nom'    => $etudiant->nom,
-                'prenom' => $etudiant->prenom,
-                'email'  => $etudiant->email,
+                'id'          => $etudiant->id,
+                'nom'         => $etudiant->nom,
+                'prenom'      => $etudiant->prenom,
+                'email'       => $etudiant->email,
+                'telephone'   => $etudiant->telephone,
+                'photoProfil' => $etudiant->photoProfil
+                    ? asset('storage/' . $etudiant->photoProfil)
+                    : null,
+                'cv'          => $etudiant->cv
+                    ? asset('storage/' . $etudiant->cv)
+                    : null,
+                'progression' => $etudiant->progression,
             ],
         ]);
     }

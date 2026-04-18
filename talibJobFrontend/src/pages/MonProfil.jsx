@@ -29,6 +29,7 @@ export default function MonProfil() {
     api
       .get("/etudiant/profil")
       .then((r) => {
+        console.log(r);
         setProfil(r.data);
         setForm({
           nom: r.data.nom || "",
@@ -36,6 +37,7 @@ export default function MonProfil() {
           poste: r.data.poste || "",
           telephone: r.data.telephone || "",
           competences: (r.data.competences || []).join(", "),
+          photoProfil:r.data.photoProfil
         });
       })
       .catch((err) => console.error(err))
@@ -48,6 +50,8 @@ export default function MonProfil() {
     try {
       await api.put("/etudiant/profil", form);
       const r = await api.get("/etudiant/profil");
+      console.log("debiggin",r);
+      
       setProfil(r.data);
       setForm({
         nom: r.data.nom || "",
@@ -81,7 +85,10 @@ export default function MonProfil() {
       });
 
       // ✅ utiliser directement URL backend
-      const photoUrl = r.data.photo;
+      const photoUrl = r.data.photoProfil;
+      console.log(photoUrl);
+      
+     
 
       setProfil((prev) => ({ ...prev, photoProfil: photoUrl }));
 

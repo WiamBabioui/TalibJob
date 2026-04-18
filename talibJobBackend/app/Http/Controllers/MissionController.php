@@ -26,7 +26,7 @@ class MissionController extends Controller
                 'type'            => $m->type,
                 'remuneration'    => $m->remuneration,
                 'lieu'            => $m->lieu,
-                'entreprise'      => ['id' => $m->entreprise->id, 'nom' => $m->entreprise->nom, 'logo' => $m->entreprise->logo],
+                'entreprise'      => ['id' => $m->entreprise->id, 'nom' => $m->entreprise->nom, 'logo' => $m->entreprise->logo ? asset('storage/' . $m->entreprise->logo) : null],
                 'datePublication' => $m->datePublication?->diffForHumans(),
                 'vues'            => $m->vues,
             ]);
@@ -60,7 +60,7 @@ class MissionController extends Controller
                 'nom'         => $mission->entreprise->nom,
                 'secteur'     => $mission->entreprise->secteur,
                 'description' => $mission->entreprise->description,
-                'logo'        => $mission->entreprise->logo,
+                'logo'        => $mission->entreprise->logo ? asset('storage/' . $mission->entreprise->logo) : null,
                 'siteWeb'     => $mission->entreprise->siteWeb,
             ],
         ]);
@@ -145,11 +145,68 @@ class MissionController extends Controller
 
         return response()->json($offres);
     }
-    // Dans MissionController.php
-public function update(Request $request, $id)
-{
-    $mission = Mission::findOrFail($id);
-    $mission->update($request->all());
-    return response()->json($mission, 200);
-}
+
+    // GET /api/entreprise/missions/{id}  (détail d'une offre - protégé entreprise)
+    public function showEntreprise(Request $request, $id)
+    {
+        $mission = Mission::where('idEntreprise', $request->user()->id)
+            ->findOrFail($id);
+
+        return response()->json([
+            'id'                  => $mission->id,
+            'titre'               => $mission->titre,
+            'description'         => $mission->description,
+            'type'                => $mission->type,
+            'competencesRequises' => $mission->competencesRequises,
+            'remuneration'        => $mission->remuneration,
+            'lieu'                => $mission->lieu,
+            'statut'              => $mission->statut,
+            'dateExpiration'      => $mission->dateFin?->format('Y-m-d'),
+            'vues'                => $mission->vues,
+        ]);
+    }
+
+    // PUT /api/entreprise/missions/{id}  (modifier une offre - protégé entreprise)
+    public function update(Request $request, $id)
+    {
+        $mission = Mission::where('idEntreprise', $request->user()->id)
+            ->findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'titre'       => 'required|string|max:150',
+            'description' => 'required|string',
+            'type'        => 'required|string',
+            'lieu'        => 'required|string|max:100',
+            'statut'      => 'sometimes|in:active,brouillon,fermee,pourvue',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 422);
+        }
+
+        $mission->update([
+            'titre'               => $request->titre,
+            'description'         => $request->description,
+            'type'                => $request->type,
+            'competencesRequises' => $request->competencesRequises,
+            'remuneration'        => $request->remuneration,
+            'lieu'                => $request->lieu,
+            'statut'              => $request->statut ?? $mission->statut,
+            'dateModification'    => now(),
+        ]);
+
+        return response()->json(['success' => 'Offre modifiée avec succès !', 'mission' => $mission]);
+    }
+
+    // DELETE /api/entreprise/missions/{id}  (supprimer une offre - protégé entreprise)
+    public function destroy(Request $request, $id)
+    {
+        $mission = Mission::where('idEntreprise', $request->user()->id)
+            ->findOrFail($id);
+
+        $mission->delete();
+
+        return response()->json(['success' => 'Offre supprimée avec succès !']);
+    }
+
 }

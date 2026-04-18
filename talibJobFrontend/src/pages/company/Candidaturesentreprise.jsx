@@ -2,6 +2,13 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../../services/api";
 
+const BASE = window.location.hostname === "localhost" ? "http://localhost:8000" : "";
+function normalizeLogo(url) {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  return `${BASE}/storage/${url}`;
+}
+
 function avatarColor(name = "") {
   const colors = [
     ["#dbeafe", "#1d4ed8"], ["#dcfce7", "#15803d"], ["#f3e8ff", "#7c3aed"],
@@ -32,6 +39,8 @@ export default function CandidaturesEntreprise() {
   const [updatingId, setUpdatingId]     = useState(null);
   const [selected, setSelected]         = useState(null); // candidature détail
   const [message, setMessage]           = useState(null);
+  const entreprise = (() => { try { return JSON.parse(localStorage.getItem("entreprise") || "{}"); } catch { return {}; } })();
+  const logoUrl = normalizeLogo(entreprise.logo);
 
   useEffect(() => {
     setLoading(true);
@@ -117,12 +126,15 @@ export default function CandidaturesEntreprise() {
             <div className="d-flex align-items-center gap-3">
               <div style={{
                 width: 48, height: 48, borderRadius: 12,
-                background: "linear-gradient(135deg, #6366f1, #0ea5e9)",
+                background: logoUrl ? "transparent" : "linear-gradient(135deg, #6366f1, #0ea5e9)",
                 color: "#fff", fontWeight: 800, fontSize: 20,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
+                flexShrink: 0, overflow: "hidden",
+                border: logoUrl ? "1px solid #e5e7eb" : "none",
               }}>
-                {(offre.titre || "O")[0].toUpperCase()}
+                {logoUrl
+                  ? <img src={logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : (offre.titre || "O")[0].toUpperCase()}
               </div>
               <div>
                 <h5 className="fw-bold mb-0" style={{ fontSize: 17 }}>{offre.titre}</h5>
@@ -254,12 +266,14 @@ export default function CandidaturesEntreprise() {
                       <div className="d-flex align-items-center gap-3">
                         <div style={{
                           width: 42, height: 42, borderRadius: "50%",
-                          background: abg, color: atc,
+                          background: c.etudiant?.photoProfil ? "transparent" : abg, color: atc,
                           fontWeight: 700, fontSize: 17,
                           display: "flex", alignItems: "center", justifyContent: "center",
-                          flexShrink: 0,
+                          flexShrink: 0, overflow: "hidden",
                         }}>
-                          {initial}
+                          {c.etudiant?.photoProfil
+                            ? <img src={c.etudiant.photoProfil} alt={fullName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            : initial}
                         </div>
                         <div>
                           <div className="fw-bold" style={{ fontSize: 14, color: "#111827" }}>{fullName}</div>
@@ -303,12 +317,15 @@ export default function CandidaturesEntreprise() {
                     <div className="d-flex align-items-center gap-3">
                       <div style={{
                         width: 52, height: 52, borderRadius: "50%",
-                        background: "rgba(255,255,255,0.25)", color: "#fff",
-                        fontWeight: 800, fontSize: 22,
+                        background: selected.etudiant?.photoProfil ? "transparent" : "rgba(255,255,255,0.25)",
+                        color: "#fff", fontWeight: 800, fontSize: 22,
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        flexShrink: 0,
+                        flexShrink: 0, overflow: "hidden",
+                        border: selected.etudiant?.photoProfil ? "2px solid rgba(255,255,255,0.5)" : "none",
                       }}>
-                        {initial}
+                        {selected.etudiant?.photoProfil
+                          ? <img src={selected.etudiant.photoProfil} alt={fullName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          : initial}
                       </div>
                       <div>
                         <div className="fw-bold text-white" style={{ fontSize: 16 }}>{fullName}</div>

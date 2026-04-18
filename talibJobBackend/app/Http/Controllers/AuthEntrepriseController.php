@@ -43,6 +43,7 @@ class AuthEntrepriseController extends Controller
                 'id'    => $entreprise->id,
                 'nom'   => $entreprise->nom,
                 'email' => $entreprise->email,
+                'logo'  => null,
             ],
         ], 201);
     }
@@ -74,9 +75,13 @@ class AuthEntrepriseController extends Controller
             'success'    => 'Connexion réussie !',
             'token'      => $token,
             'entreprise' => [
-                'id'    => $entreprise->id,
-                'nom'   => $entreprise->nom,
-                'email' => $entreprise->email,
+                'id'        => $entreprise->id,
+                'nom'       => $entreprise->nom,
+                'email'     => $entreprise->email,
+                'telephone' => $entreprise->telephone,
+                'logo'      => $entreprise->logo
+                    ? asset('storage/' . $entreprise->logo)
+                    : null,
             ],
         ]);
     }
@@ -91,6 +96,13 @@ class AuthEntrepriseController extends Controller
     // GET /api/entreprise/me
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        $e = $request->user();
+        return response()->json([
+            'id'        => $e->id,
+            'nom'       => $e->nom,
+            'email'     => $e->email,
+            'telephone' => $e->telephone,
+            'logo'      => $e->logo ? asset('storage/' . $e->logo) : null,
+        ]);
     }
 }

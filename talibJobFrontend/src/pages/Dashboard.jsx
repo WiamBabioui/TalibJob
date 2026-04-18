@@ -2,6 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 
+const BASE = window.location.hostname === "localhost" ? "http://localhost:8000" : "";
+function normalizePhoto(url) {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  return `${BASE}/storage/${url}`;
+}
+
 function avatarColor(name = "") {
   const colors = [
     ["#dbeafe", "#1d4ed8"], ["#dcfce7", "#15803d"], ["#f3e8ff", "#7c3aed"],
@@ -82,16 +89,28 @@ export default function Dashboard() {
               </Link>
             </div>
             <div className="d-flex align-items-center flex-wrap gap-3">
-              {/* Avatar initiale */}
-              <div style={{
-                width: 72, height: 72, borderRadius: "50%",
-                background: pbg, color: ptc,
-                fontWeight: 800, fontSize: 28,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
-              }}>
-                {profilInit}
-              </div>
+              {/* Avatar */}
+              {normalizePhoto(profil.photoProfil || etudiant.photoProfil) ? (
+                <img
+                  src={normalizePhoto(profil.photoProfil || etudiant.photoProfil)}
+                  alt="avatar"
+                  style={{
+                    width: 72, height: 72, borderRadius: "50%",
+                    objectFit: "cover", flexShrink: 0,
+                    border: "3px solid #e8eaf0",
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: 72, height: 72, borderRadius: "50%",
+                  background: pbg, color: ptc,
+                  fontWeight: 800, fontSize: 28,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  {profilInit}
+                </div>
+              )}
               <div>
                 <h6 className="mb-0 fw-bold">{profilName}</h6>
                 <small className="text-muted">{profil.email || etudiant.email}</small>
@@ -148,15 +167,20 @@ export default function Dashboard() {
                       style={{ border: "1px solid #f0f0f0", background: "#fafafa" }}>
                       <div className="d-flex align-items-center gap-3">
                         {/* Avatar entreprise */}
-                        <div style={{
-                          width: 38, height: 38, borderRadius: 10,
-                          background: obg, color: otc,
-                          fontWeight: 700, fontSize: 15,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          flexShrink: 0,
-                        }}>
-                          {(o.entreprise || "?")[0].toUpperCase()}
-                        </div>
+                        {o.entrepriseLogo ? (
+                          <img src={o.entrepriseLogo} alt={o.entreprise}
+                            style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover", flexShrink: 0, border: "1px solid #e8eaf0" }} />
+                        ) : (
+                          <div style={{
+                            width: 38, height: 38, borderRadius: 10,
+                            background: obg, color: otc,
+                            fontWeight: 700, fontSize: 15,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            flexShrink: 0,
+                          }}>
+                            {(o.entreprise || "?")[0].toUpperCase()}
+                          </div>
+                        )}
                         <div>
                           <div className="fw-semibold" style={{ fontSize: 14 }}>{o.titre}</div>
                           <small className="text-muted">{o.entreprise} · {o.lieu}</small>

@@ -3,13 +3,38 @@ import logo from "../img/logoFinalTalibJob-removebg-preview.png";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./CompanyLayout.css";
 
+const BASE = window.location.hostname === "localhost" ? "http://localhost:8000" : "";
+function normalizeLogo(url) {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  return `${BASE}/storage/${url}`;
+}
+
+function getEntreprise() {
+  try { return JSON.parse(localStorage.getItem("entreprise") || "{}"); }
+  catch { return {}; }
+}
+
 export default function CompanyLayout() {
   const location  = useLocation();
   const navigate  = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [entreprise, setEntreprise] = useState(getEntreprise);
   const dropdownRef = useRef(null);
-  const entreprise = JSON.parse(localStorage.getItem("entreprise") || "{}");
+
+  // Sync quand le logo change
+  useEffect(() => {
+    const sync = () => setEntreprise(getEntreprise());
+    window.addEventListener("entreprise-updated", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("entreprise-updated", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  const logoUrl = normalizeLogo(entreprise.logo);
 
   // Fermer le dropdown si on clique en dehors
   useEffect(() => {
@@ -69,10 +94,15 @@ export default function CompanyLayout() {
         {/* Profil entreprise */}
         {sidebarOpen && (
           <div className="text-center p-3 border-bottom">
-            <div className="mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
-              style={{ width: "56px", height: "56px", background: "linear-gradient(135deg, #fefefe, #0f9cde)", fontSize: "20px" }}>
-              {initial}
-            </div>
+            {logoUrl ? (
+              <img src={logoUrl} alt="Logo"
+                style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", margin: "0 auto 8px", display: "block", border: "2px solid #e8eaf0" }} />
+            ) : (
+              <div className="mx-auto mb-2 rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                style={{ width: "56px", height: "56px", background: "linear-gradient(135deg, #fefefe, #0f9cde)", fontSize: "20px" }}>
+                {initial}
+              </div>
+            )}
             <div className="fw-semibold small text-truncate" style={{ maxWidth: "180px" }}>
               {entreprise.nom || "Entreprise"}
             </div>
@@ -121,7 +151,7 @@ export default function CompanyLayout() {
 
         {/* Top navbar */}
         <nav className="d-flex align-items-center px-4"
-          style={{ height: "71px", background: "#fff", borderBottom: "1px solid #e8eaf0" }}>
+          style={{ height: "79px", background: "#fff", borderBottom: "1px solid #e8eaf0" }}>
 
           <div style={{ flex: 1 }} />
 
@@ -146,23 +176,19 @@ export default function CompanyLayout() {
               <button
                 onClick={() => setDropdownOpen(prev => !prev)}
                 style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "50%",
-                  background: "linear-gradient(135deg,#3b82f6,#06b6d4)",
-                  color: "#fff",
-                  fontWeight: 700,
-                  fontSize: "14px",
-                  border: "none",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  width: "36px", height: "36px", borderRadius: "50%",
+                  background: logoUrl ? "transparent" : "linear-gradient(135deg,#3b82f6,#06b6d4)",
+                  color: "#fff", fontWeight: 700, fontSize: "14px",
+                  border: logoUrl ? "2px solid #e8eaf0" : "none",
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                  overflow: "hidden", padding: 0,
                   transition: "box-shadow 0.18s",
                   boxShadow: dropdownOpen ? "0 0 0 3px rgba(59,130,246,0.25)" : "none",
                 }}
               >
-                {initial}
+                {logoUrl
+                  ? <img src={logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : initial}
               </button>
 
               {/* Dropdown panel */}
@@ -185,12 +211,15 @@ export default function CompanyLayout() {
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={{
                         width: 40, height: 40, borderRadius: "50%",
-                        background: "linear-gradient(135deg,#3b82f6,#06b6d4)",
+                        background: logoUrl ? "transparent" : "linear-gradient(135deg,#3b82f6,#06b6d4)",
                         color: "#fff", fontWeight: 700, fontSize: 16,
                         display: "flex", alignItems: "center", justifyContent: "center",
-                        flexShrink: 0,
+                        flexShrink: 0, overflow: "hidden",
+                        border: logoUrl ? "2px solid #e8eaf0" : "none",
                       }}>
-                        {initial}
+                        {logoUrl
+                          ? <img src={logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          : initial}
                       </div>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: 13.5, color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -255,7 +284,7 @@ export default function CompanyLayout() {
         </div>
 
         <footer className="text-center"
-          style={{ fontSize: "12px", color: "#9ca3af", borderTop: "1px solid #e8eaf0", background: "#fff", height: "54px", paddingTop: "20px" }}>
+          style={{ fontSize: "15px", color: "#9ca3af", borderTop: "1px solid #e8eaf0", background: "#fff", height: "57px", paddingTop: "20px" }}>
           © 2025 TALIB-JOB. Tous droits réservés.
         </footer>
       </div>

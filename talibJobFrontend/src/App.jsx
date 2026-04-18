@@ -24,6 +24,7 @@ import CompanyRegister from "./pages/company/CompanyRegister";
 // Entreprise - Espace
 import CompanyDashboard from "./pages/company/CompanyDashboard";
 import PublierOffre from "./pages/company/PublierOffre";
+import ModifierOffre from "./pages/company/ModifierOffre";
 import MesOffres from "./pages/company/MesOffres";
 import CompanyParametres from "./pages/company/CompanyParametres";
 import CandidaturesEntreprise from "./pages/company/Candidaturesentreprise";
@@ -59,9 +60,10 @@ function App() {
         <Route path="/company" element={<CompanyLayout />}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<CompanyDashboard />} />
-          <Route path="mesoffres" element={<MesOffres />} />
+          <Route path="MesOffres" element={<MesOffres />} />
           <Route path="candidatures" element={<CandidaturesEntreprise />} />
           <Route path="offres/nouvelle" element={<PublierOffre />} />
+          <Route path="offres/:id/modifier" element={<ModifierOffre />} />
           <Route
             path="offres/:id/candidatures"
             element={<CandidaturesEntreprise />}

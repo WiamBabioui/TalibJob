@@ -20,6 +20,13 @@ const typeConfig = {
 
 const FILTERS = ["tous", "active", "brouillon", "fermee", "pourvue"];
 
+const BASE = window.location.hostname === "localhost" ? "http://localhost:8000" : "";
+function normalizeLogo(url) {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  return `${BASE}/storage/${url}`;
+}
+
 export default function MesOffres() {
   const [offres, setOffres]       = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -50,6 +57,7 @@ export default function MesOffres() {
   );
 
   const initial = (entreprise.nom || "E")[0].toUpperCase();
+  const logoUrl = normalizeLogo(entreprise.logo);
 
   return (
     <div style={{ fontFamily:"'Inter', system-ui, sans-serif", padding:"4px 0 48px", color:"#111827" }}>
@@ -155,8 +163,10 @@ export default function MesOffres() {
 
                   {/* Identity */}
                   <div style={{ display:"flex", gap:11, alignItems:"flex-start", marginBottom:12 }}>
-                    <div style={{ width:38, height:38, borderRadius:10, background:"#4c72f1", color:"#fff", fontWeight:700, fontSize:16, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                      {initial}
+                    <div style={{ width:38, height:38, borderRadius:10, background: logoUrl ? "transparent" : "#4c72f1", color:"#fff", fontWeight:700, fontSize:16, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, overflow:"hidden", border: logoUrl ? "1px solid #e5e7eb" : "none" }}>
+                      {logoUrl
+                        ? <img src={logoUrl} alt="logo" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                        : initial}
                     </div>
                     <div>
                       <div style={{ fontWeight:700, fontSize:14, color:"#111827", lineHeight:1.4 }}>{o.titre}</div>

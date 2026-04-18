@@ -14,6 +14,19 @@ export default function CompanyDashboard() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const entreprise = JSON.parse(localStorage.getItem("entreprise") || "{}");
+  const handleDelete = async (id) => {
+  if (!window.confirm("Voulez-vous vraiment supprimer cette offre ?")) return;
+
+  try {
+    await api.delete(`/entreprise/missions/${id}`);
+    setData((prev) => ({
+      ...prev,
+      offres: prev.offres.filter((o) => o.id !== id)
+    }));
+  } catch (error) {
+    console.error("Erreur suppression", error);
+  }
+};
 
   useEffect(() => {
     api.get("/entreprise/dashboard")
@@ -115,17 +128,32 @@ export default function CompanyDashboard() {
                     </div>
 
                     <div className="d-flex flex-column flex-sm-row gap-2">
-                      <span className="badge" style={{ background: cfg.bg, color: cfg.color }}>
-                        {cfg.label}
-                      </span>
 
-                      <Link
-                        to={`/company/offres/${o.id}/candidatures`}
-                        className="btn btn-sm btn-primary"
-                      >
-                        Voir
-                      </Link>
-                    </div>
+  <Link
+    to={`/company/offres/${o.id}/modifier`}
+    className="btn btn-sm btn-warning"
+    style={{ width: "110px", fontWeight: "600", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}
+  >
+    Modifier
+  </Link>
+
+  <button
+    className="btn btn-sm btn-danger"
+    onClick={() => handleDelete(o.id)}
+    style={{ width: "110px", fontWeight: "600", display: "flex", alignItems: "center", justifyContent: "center" }}
+  >
+    Supprimer
+  </button>
+
+  <Link
+    to={`/company/offres/${o.id}/candidatures`}
+    className="btn btn-sm btn-primary"
+    style={{ width: "110px", fontWeight: "600", display: "flex", alignItems: "center", justifyContent: "center" }}
+  >
+    Voir
+  </Link>
+
+</div>
                   </div>
                 );
               })

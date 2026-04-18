@@ -1,12 +1,14 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../../services/api";
 import { Link } from "react-router-dom";
 
-export default function PublierOffre() {
+export default function ModifierOffre() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const entreprise = JSON.parse(localStorage.getItem("entreprise") || "{}");
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [errors, setErrors]   = useState({});
   const [form, setForm] = useState({
     titre:               "",
@@ -16,14 +18,37 @@ export default function PublierOffre() {
     type:                "",
     lieu:                "",
     dateExpiration:      "",
+    statut:              "active",
   });
+
+  // Charger les données de l'offre existante
+  useEffect(() => {
+    api.get(`/entreprise/missions/${id}`)
+      .then(r => {
+        const o = r.data;
+        setForm({
+          titre:               o.titre               || "",
+          description:         o.description         || "",
+          competencesRequises: o.competencesRequises  || "",
+          remuneration:        o.remuneration         || "",
+          type:                o.type                || "",
+          lieu:                o.lieu                || "",
+          dateExpiration:      o.dateExpiration       || "",
+          statut:              o.statut              || "active",
+        });
+      })
+      .catch(e => {
+        if (e.response?.status === 401) navigate("/company/login");
+        else alert("Impossible de charger l'offre.");
+      })
+      .finally(() => setFetching(false));
+  }, [id]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: "" });
   };
 
-  // Validation frontend
   const validate = () => {
     const e = {};
     if (!form.titre.trim())       e.titre       = "Le titre est obligatoire.";
@@ -44,27 +69,33 @@ export default function PublierOffre() {
 
     setLoading(true);
     try {
-      await api.post("/entreprise/missions", {
+      await api.put(`/entreprise/missions/${id}`, {
         titre:               form.titre,
         description:         form.description,
         competencesRequises: form.competencesRequises,
         remuneration:        form.remuneration ? Math.abs(Number(form.remuneration)) : null,
         type:                form.type,
         lieu:                form.lieu,
-        statut:              "active",
+        statut:              form.statut,
       });
-      alert("Offre publiée avec succès ! ✅");
+      alert("Offre modifiée avec succès ! ✅");
       navigate("/company/dashboard");
     } catch (err) {
-      alert(err.response?.data?.error || "Erreur lors de la publication.");
+      alert(err.response?.data?.error || "Erreur lors de la modification.");
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetching) return (
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "60vh" }}>
+      <div className="spinner-border text-primary" role="status" />
+    </div>
+  );
+
   return (
     <div>
-      <h3 className="fw-bold mb-4">Publier une nouvelle offre</h3>
+      <h3 className="fw-bold mb-4">Modifier l'offre</h3>
 
       <div className="row g-4">
 
@@ -163,7 +194,7 @@ export default function PublierOffre() {
               </div>
             </div>
 
-            <div className="row g-3 mb-4">
+            <div className="row g-3 mb-3">
               {/* Lieu */}
               <div className="col-md-6">
                 <label className="form-label fw-semibold">
@@ -181,33 +212,45 @@ export default function PublierOffre() {
                 {errors.lieu && <div className="invalid-feedback">{errors.lieu}</div>}
               </div>
 
-              {/* Date expiration */}
+              {/* Statut */}
               <div className="col-md-6">
-                <label className="form-label fw-semibold">Date limite de candidature</label>
-                <input
-                  type="date"
-                  name="dateExpiration"
-                  className="form-control"
-                  value={form.dateExpiration}
-                  min={new Date().toISOString().split("T")[0]}
+                <label className="form-label fw-semibold">Statut de l'offre</label>
+                <select
+                  name="statut"
+                  className="form-select"
+                  value={form.statut}
                   onChange={handleChange}
                   style={{ borderRadius: "8px" }}
-                />
+                >
+                  <option value="active">Active</option>
+                  <option value="brouillon">Brouillon</option>
+                  <option value="fermee">Fermée</option>
+                  <option value="pourvue">Pourvue</option>
+                </select>
               </div>
             </div>
 
-            <button
-              className="btn btn-primary px-4"
-              onClick={handleSubmit}
-              disabled={loading}
-              style={{ borderRadius: "8px", fontWeight: "600" }}
-            >
-              {loading ? (
-                <><span className="spinner-border spinner-border-sm me-2" />Publication...</>
-              ) : (
-                <><i className="bi bi-send-fill me-2"></i>Publier l'offre</>
-              )}
-            </button>
+            <div className="d-flex gap-2 mt-2">
+              <button
+                className="btn btn-primary px-4"
+                onClick={handleSubmit}
+                disabled={loading}
+                style={{ borderRadius: "8px", fontWeight: "600" }}
+              >
+                {loading ? (
+                  <><span className="spinner-border spinner-border-sm me-2" />Enregistrement...</>
+                ) : (
+                  <><i className="bi bi-check-circle-fill me-2"></i>Enregistrer les modifications</>
+                )}
+              </button>
+              <Link
+                to="/company/dashboard"
+                className="btn btn-outline-secondary px-4"
+                style={{ borderRadius: "8px", fontWeight: "600" }}
+              >
+                Annuler
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -258,11 +301,6 @@ export default function PublierOffre() {
                   </div>
                 </div>
               )}
-              <hr />
-              <div className="d-flex gap-2">
-                <Link className="btn btn-sm btn-outline-secondary flex-fill"style={{ fontSize: "12px" }} to="/company/MesOffres">Voir l'offre complète</Link>
-                
-              </div>
             </div>
           </div>
         </div>

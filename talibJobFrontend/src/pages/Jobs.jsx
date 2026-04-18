@@ -181,15 +181,20 @@ export default function Jobs() {
                     <div style={{ height: 4, background: "linear-gradient(90deg, #1d4ed8, #0ea5e9)" }} />
                     <div className="p-4 d-flex flex-column flex-fill">
                       <div className="d-flex align-items-center gap-3 mb-3">
-                        <div style={{
-                          width: 46, height: 46, borderRadius: 12,
-                          background: abg, color: atc,
-                          fontWeight: 700, fontSize: 19,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          flexShrink: 0,
-                        }}>
-                          {nomEnt[0].toUpperCase()}
-                        </div>
+                        {m.entreprise?.logo ? (
+                          <img src={m.entreprise.logo} alt={nomEnt}
+                            style={{ width: 46, height: 46, borderRadius: 12, objectFit: "cover", flexShrink: 0, border: "1px solid #e8eaf0" }} />
+                        ) : (
+                          <div style={{
+                            width: 46, height: 46, borderRadius: 12,
+                            background: abg, color: atc,
+                            fontWeight: 700, fontSize: 19,
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            flexShrink: 0,
+                          }}>
+                            {nomEnt[0].toUpperCase()}
+                          </div>
+                        )}
                         <div className="overflow-hidden flex-fill">
                           <div className="fw-semibold text-truncate" style={{ fontSize: 14, color: "#374151" }}>
                             {nomEnt}

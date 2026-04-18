@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import logo from "../img/logoFinalTalibJob.png";
 
@@ -23,11 +23,34 @@ function getEtudiant() {
   }
 }
 
+const BASE = window.location.hostname === "localhost"
+  ? "http://localhost:8000"
+  : "";
+
+function normalizePhoto(url) {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  // chemin relatif stocké comme "photos/xxx.jpg"
+  return `${BASE}/storage/${url}`;
+}
+
 export default function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [etudiant, setEtudiant] = useState(getEtudiant);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const sync = () => setEtudiant(getEtudiant());
@@ -39,10 +62,34 @@ export default function MainLayout() {
     };
   }, []);
 
+  // Rafraîchir les données depuis l'API au montage pour récupérer la photo à jour
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    fetch((window.location.hostname === "localhost" ? "http://localhost:8000" : "") + "/api/etudiant/me", {
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data) return;
+        const updated = {
+          ...getEtudiant(),
+          photoProfil: data.photoProfil || getEtudiant().photoProfil,
+          nom: data.nom || getEtudiant().nom,
+          prenom: data.prenom || getEtudiant().prenom,
+          email: data.email || getEtudiant().email,
+        };
+        localStorage.setItem("etudiant", JSON.stringify(updated));
+        setEtudiant(updated);
+      })
+      .catch(() => {});
+  }, []);
+
   const fullName =
     `${etudiant.prenom || ""} ${etudiant.nom || ""}`.trim() || "Étudiant";
   const initial = fullName[0]?.toUpperCase() || "E";
   const [bgColor, textColor] = avatarColor(fullName);
+  const photoUrl = normalizePhoto(etudiant.photoProfil);
 
   const isActive = (path) => location.pathname === `/${path}`;
 
@@ -123,9 +170,9 @@ export default function MainLayout() {
           className={`d-flex align-items-center p-3 border-bottom ${!sidebarOpen ? "justify-content-center" : ""}`}
         >
           <div style={{ position: "relative", flexShrink: 0 }}>
-            {etudiant.photoProfil ? (
+            {photoUrl ? (
               <img
-                src={etudiant.photoProfil}
+                src={photoUrl}
                 alt="avatar"
                 style={{
                   width: 44,
@@ -293,44 +340,111 @@ export default function MainLayout() {
             })}
           </div>
 
-          {/* Avatar droite */}
+          {/* Avatar droite + dropdown */}
           <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
-            {etudiant.photoProfil ? (
-              <img
-                src={etudiant.photoProfil}
-                alt="avatar"
-                onClick={() => navigate("/profil")}
+            <div ref={dropdownRef} style={{ position: "relative" }}>
+              {/* Bouton avatar */}
+              <button
+                onClick={() => setDropdownOpen(prev => !prev)}
                 style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  cursor: "pointer",
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: bgColor, color: textColor,
+                  fontWeight: 700, fontSize: 14,
                   border: "2px solid #e8eaf0",
-                }}
-              />
-            ) : (
-              <div
-                onClick={() => navigate("/profil")}
-                title={fullName}
-                style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: "50%",
-                  background: bgColor,
-                  color: textColor,
-                  fontWeight: 700,
-                  fontSize: 14,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
                   cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  overflow: "hidden", padding: 0,
+                  boxShadow: dropdownOpen ? "0 0 0 3px rgba(59,130,246,0.25)" : "none",
+                  transition: "box-shadow 0.18s",
                 }}
               >
-                {initial}
-              </div>
-            )}
+                {photoUrl ? (
+                  <img src={photoUrl} alt="avatar"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : initial}
+              </button>
+
+              {/* Dropdown panel */}
+              {dropdownOpen && (
+                <div style={{
+                  position: "absolute", top: "calc(100% + 10px)", right: 0,
+                  minWidth: "220px", background: "#fff", borderRadius: "12px",
+                  border: "1px solid #e5e7eb", boxShadow: "0 10px 32px rgba(0,0,0,0.10)",
+                  overflow: "hidden", zIndex: 999,
+                  animation: "dropdownFade 0.18s ease",
+                }}>
+                  {/* Infos utilisateur */}
+                  <div style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{
+                        width: 40, height: 40, borderRadius: "50%",
+                        background: bgColor, color: textColor,
+                        fontWeight: 700, fontSize: 16,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        flexShrink: 0, overflow: "hidden",
+                      }}>
+                        {photoUrl
+                          ? <img src={photoUrl} alt="avatar"
+                              style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          : initial}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 13.5, color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {fullName}
+                        </div>
+                        <div style={{ fontSize: 12, color: "#9ca3af", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {etudiant.email || "email@exemple.com"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Menu items */}
+                  <div style={{ padding: "6px" }}>
+                    <Link
+                      to="/parametres"
+                      onClick={() => setDropdownOpen(false)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 9,
+                        padding: "9px 12px", borderRadius: 8,
+                        color: "#374151", fontSize: 13.5, fontWeight: 500,
+                        textDecoration: "none", transition: "background 0.15s",
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      <i className="bi bi-gear" style={{ fontSize: 15, color: "#6b7280" }}></i>
+                      Paramètres
+                    </Link>
+
+                    <button
+                      onClick={handleLogout}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 9,
+                        padding: "9px 12px", borderRadius: 8,
+                        color: "#ef4444", fontSize: 13.5, fontWeight: 500,
+                        background: "none", border: "none", width: "100%",
+                        cursor: "pointer", transition: "background 0.15s",
+                        fontFamily: "inherit",
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#fef2f2"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      <i className="bi bi-box-arrow-right" style={{ fontSize: 15 }}></i>
+                      Déconnexion
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+
+          <style>{`
+            @keyframes dropdownFade {
+              from { opacity: 0; transform: translateY(-6px); }
+              to   { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
         </nav>
 
         {/* Page content */}

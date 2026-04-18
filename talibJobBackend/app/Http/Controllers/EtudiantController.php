@@ -27,6 +27,9 @@ class EtudiantController extends Controller
                 'remuneration' => $m->remuneration,
                 'lieu'         => $m->lieu,
                 'entreprise'   => $m->entreprise->nom,
+                'entrepriseLogo' => $m->entreprise->logo
+                    ? asset('storage/' . $m->entreprise->logo)
+                    : null,
             ]);
 
         $activite = Candidature::with('mission')
@@ -183,5 +186,67 @@ class EtudiantController extends Controller
             $path,
             'CV_' . $etudiant->nom . '_' . $etudiant->prenom . '.pdf'
         );
+    }
+
+    // PUT /api/etudiant/parametres
+    public function parametres(Request $request)
+    {
+        $etudiant = $request->user();
+
+        $rules = [
+            'nom'         => 'sometimes|string|max:100',
+            'prenom'      => 'sometimes|string|max:100',
+            'telephone'   => 'sometimes|nullable|string|max:20',
+            'newPassword' => 'sometimes|nullable|string|min:6',
+        ];
+
+        if ($request->filled('email') && $request->email !== $etudiant->email) {
+            $rules['email'] = 'email|unique:Etudiant,email';
+        }
+
+        $validator = Validator::make($request->all(), $rules, [
+            'email.unique' => 'Cet email est déjà utilisé par un autre compte.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 422);
+        }
+
+        $data = ['dateModification' => now()];
+        if ($request->filled('nom'))       $data['nom']       = $request->nom;
+        if ($request->filled('prenom'))    $data['prenom']    = $request->prenom;
+        if ($request->filled('telephone')) $data['telephone'] = $request->telephone;
+        if ($request->filled('email'))     $data['email']     = $request->email;
+        if ($request->filled('newPassword')) {
+            $data['motDePasse'] = Hash::make($request->newPassword);
+        }
+
+        $etudiant->update($data);
+        $etudiant->refresh();
+
+        return response()->json([
+            'success'  => 'Paramètres enregistrés avec succès !',
+            'etudiant' => [
+                'id'        => $etudiant->id,
+                'nom'       => $etudiant->nom,
+                'prenom'    => $etudiant->prenom,
+                'email'     => $etudiant->email,
+                'telephone' => $etudiant->telephone,
+            ],
+        ]);
+    }
+
+    // DELETE /api/etudiant/compte
+    public function supprimerCompte(Request $request)
+    {
+        $etudiant = $request->user();
+
+        // Révoquer tous les tokens Sanctum
+        $etudiant->tokens()->delete();
+
+        // Supprimer le compte
+        $etudiant->delete();
+
+        return response()->json(['success' => 'Compte étudiant supprimé avec succès.']);
     }
 }

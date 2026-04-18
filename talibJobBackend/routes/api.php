@@ -71,6 +71,7 @@ Route::middleware('auth:sanctum')->prefix('entreprise')->group(function () {
     Route::put('/missions/{id}',     [MissionController::class,   'update']);          // ✅ bonus : modifier une offre
     Route::delete('/missions/{id}',  [MissionController::class,   'destroy']);         // ✅ bonus : supprimer une offre
 
+    Route::post('/upload-logo',               [EntrepriseController::class, 'uploadLogo']);
     Route::get('/missions/{id}/candidatures', [EntrepriseController::class, 'candidaturesMission']);
     Route::put('/candidatures/{id}/statut',   [EntrepriseController::class, 'updateStatut']);
 });
