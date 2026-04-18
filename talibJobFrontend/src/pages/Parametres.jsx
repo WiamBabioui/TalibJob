@@ -19,19 +19,49 @@ export default function Parametres() {
   const [deleting, setDeleting]       = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [message, setMessage]         = useState(null);
+  const [photoProfil, setPhotoProfil]   = useState(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
     api.get("/etudiant/profil")
-      .then(r => setForm({
-        nom:         r.data.nom       || "",
-        prenom:      r.data.prenom    || "",
-        email:       r.data.email     || "",
-        telephone:   r.data.telephone || "",
-        newPassword: "",
-      }))
+      .then(r => {
+        setForm({
+          nom:         r.data.nom       || "",
+          prenom:      r.data.prenom    || "",
+          email:       r.data.email     || "",
+          telephone:   r.data.telephone || "",
+          newPassword: "",
+        });
+        setPhotoProfil(r.data.photoProfil || null);
+      })
       .catch(e => { if (e.response?.status === 401) navigate("/student/login"); })
       .finally(() => setLoading(false));
   }, []);
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    setMessage(null);
+    try {
+      const formData = new FormData();
+      formData.append("photo", file);
+      const res = await api.post("/etudiant/upload-photo", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const newPhoto = res.data.photo;
+      setPhotoProfil(newPhoto);
+      // Sync localStorage
+      const etudiantActuel = JSON.parse(localStorage.getItem("etudiant") || "{}");
+      localStorage.setItem("etudiant", JSON.stringify({ ...etudiantActuel, photoProfil: newPhoto }));
+      window.dispatchEvent(new Event("etudiant-updated"));
+      setMessage({ type: "success", text: "Photo de profil mise à jour ✅" });
+    } catch (err) {
+      setMessage({ type: "danger", text: err.response?.data?.error || "Erreur lors de l'upload." });
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -123,22 +153,45 @@ export default function Parametres() {
         <div className="col-12">
           <div className="card p-4" style={{ borderRadius: 14, border: "1px solid #e8eaf0" }}>
             <div className="d-flex align-items-center gap-4">
-              <div style={{
-                width: 64, height: 64, borderRadius: "50%",
-                background: bgColor, color: textColor,
-                fontWeight: 800, fontSize: 26,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0, transition: "background 0.3s",
-              }}>
-                {initial}
-              </div>
+              {/* Avatar cliquable pour changer la photo */}
+              <label htmlFor="photo-upload" style={{ cursor: "pointer", position: "relative", flexShrink: 0 }}>
+                <div style={{
+                  width: 72, height: 72, borderRadius: "50%",
+                  background: photoProfil ? "transparent" : bgColor,
+                  color: textColor, fontWeight: 800, fontSize: 28,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  overflow: "hidden", border: "2px solid #e8eaf0",
+                  transition: "opacity 0.2s",
+                }}>
+                  {photoProfil
+                    ? <img src={photoProfil} alt="profil" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    : initial}
+                </div>
+                {/* Overlay caméra au hover */}
+                <div style={{
+                  position: "absolute", inset: 0, borderRadius: "50%",
+                  background: "rgba(0,0,0,0.4)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  opacity: uploadingPhoto ? 1 : 0,
+                  transition: "opacity 0.2s",
+                }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                  onMouseLeave={e => { if (!uploadingPhoto) e.currentTarget.style.opacity = "0"; }}
+                >
+                  {uploadingPhoto
+                    ? <span className="spinner-border spinner-border-sm text-white" />
+                    : <i className="bi bi-camera-fill text-white" style={{ fontSize: 18 }} />}
+                </div>
+                <input id="photo-upload" type="file" accept="image/*" style={{ display: "none" }}
+                  onChange={handlePhotoUpload} />
+              </label>
               <div>
                 <div className="fw-bold" style={{ fontSize: 16 }}>
                   {form.prenom || "—"} {form.nom || ""}
                 </div>
                 <div className="text-muted" style={{ fontSize: 13 }}>{form.email}</div>
                 <small className="text-muted" style={{ fontSize: 11 }}>
-                  L'avatar se met à jour automatiquement
+                  Cliquez sur la photo pour la changer
                 </small>
               </div>
             </div>
