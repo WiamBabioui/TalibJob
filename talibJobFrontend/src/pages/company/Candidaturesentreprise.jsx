@@ -396,9 +396,7 @@ export default function CandidaturesEntreprise() {
                   </h6>
                   {selected.etudiant?.cv ? (
                     <a
-                      href={selected.etudiant.cv.startsWith("http")
-                        ? selected.etudiant.cv
-                        : `http://localhost:8000/storage/${selected.etudiant.cv}`}
+                      href={selected.etudiant.cv}
                       className="btn btn-sm w-100 mb-4 fw-semibold d-flex align-items-center justify-content-center gap-2"
                       style={{
                         borderRadius: 9,

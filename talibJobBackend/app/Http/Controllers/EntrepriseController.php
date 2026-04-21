@@ -156,7 +156,9 @@ class EntrepriseController extends Controller
                     'email'       => $c->etudiant->email,
                     'telephone'   => $c->etudiant->telephone,
                     'competences' => $c->etudiant->competences_array,
-                    'cv'          => $c->etudiant->cv,
+                    'cv'          => $c->etudiant->cv
+                        ? asset('storage/' . $c->etudiant->cv)
+                        : null,
                     'photoProfil' => $c->etudiant->photoProfil
                         ? asset('storage/' . $c->etudiant->photoProfil)
                         : null,
@@ -190,7 +192,9 @@ class EntrepriseController extends Controller
                     'email'       => $c->etudiant->email,
                     'telephone'   => $c->etudiant->telephone,
                     'competences' => $c->etudiant->competences_array,
-                    'cv'          => $c->etudiant->cv,
+                    'cv'          => $c->etudiant->cv
+                        ? asset('storage/' . $c->etudiant->cv)
+                        : null,
                     'photoProfil' => $c->etudiant->photoProfil
                         ? asset('storage/' . $c->etudiant->photoProfil)
                         : null,
