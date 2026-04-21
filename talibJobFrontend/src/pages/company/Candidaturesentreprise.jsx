@@ -390,16 +390,41 @@ export default function CandidaturesEntreprise() {
                     </>
                   )}
 
-                  {/* CV */}
-                  {selected.etudiant?.cv && (
+                  {/* ── CV ── */}
+                  <h6 className="fw-bold mb-2" style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af" }}>
+                    CV du candidat
+                  </h6>
+                  {selected.etudiant?.cv ? (
                     <a
-                      href={`http://localhost:8000/storage/${selected.etudiant.cv}`}
-                      className="btn btn-outline-primary btn-sm w-100 mb-4"
-                      style={{ borderRadius: 8 }}
+                      href={selected.etudiant.cv.startsWith("http")
+                        ? selected.etudiant.cv
+                        : `http://localhost:8000/storage/${selected.etudiant.cv}`}
+                      className="btn btn-sm w-100 mb-4 fw-semibold d-flex align-items-center justify-content-center gap-2"
+                      style={{
+                        borderRadius: 9,
+                        background: "#eff6ff",
+                        color: "#1d4ed8",
+                        border: "1.5px solid #bfdbfe",
+                        fontSize: 13,
+                        padding: "9px 0",
+                        textDecoration: "none",
+                        transition: "background 0.15s",
+                      }}
                       target="_blank" rel="noreferrer"
+                      onMouseEnter={e => e.currentTarget.style.background = "#dbeafe"}
+                      onMouseLeave={e => e.currentTarget.style.background = "#eff6ff"}
                     >
-                      <i className="bi bi-download me-2" />Télécharger le CV
+                      <i className="bi bi-file-earmark-pdf-fill" style={{ fontSize: 15, color: "#ef4444" }} />
+                      Voir le CV
                     </a>
+                  ) : (
+                    <div className="mb-4 d-flex align-items-center gap-2 p-3 rounded"
+                      style={{ background: "#fafafa", border: "1.5px dashed #e5e7eb", borderRadius: 9 }}>
+                      <i className="bi bi-file-earmark-x" style={{ fontSize: 16, color: "#9ca3af" }} />
+                      <span style={{ fontSize: 13, color: "#9ca3af" }}>
+                        Le candidat n'a pas encore ajouté de CV
+                      </span>
+                    </div>
                   )}
 
                   {/* ── Changer le statut ── */}
