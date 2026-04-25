@@ -21,12 +21,13 @@ return [
             'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '',
             'prefix_indexes' => true,
-            'strict' => true, // Recommandé en production
+            'strict' => true,
             'engine' => null,
-            // Configuration SSL pour Aiven (active seulement si DB_HOST n'est pas 127.0.0.1)
-            'options' => env('DB_HOST') != '127.0.0.1' && extension_loaded('pdo_mysql') ? array_filter([
+            // Configuration optimisée pour Aiven Cloud
+            'options' => [
+                PDO::MYSQL_ATTR_SSL_CA => true, // Force la connexion sécurisée
                 PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
-            ]) : [],
+            ],
         ],
 
     ],
