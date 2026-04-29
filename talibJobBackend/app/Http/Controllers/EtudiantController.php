@@ -7,6 +7,7 @@ use App\Models\Candidature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class EtudiantController extends Controller
 {
@@ -27,9 +28,7 @@ class EtudiantController extends Controller
                 'remuneration' => $m->remuneration,
                 'lieu'         => $m->lieu,
                 'entreprise'   => $m->entreprise->nom,
-                'entrepriseLogo' => $m->entreprise->logo
-                    ? asset('storage/' . $m->entreprise->logo)
-                    : null,
+                'entrepriseLogo' => $m->entreprise->logo ?: null,
             ]);
 
         $activite = Candidature::with('mission')
@@ -64,16 +63,12 @@ class EtudiantController extends Controller
                     'id'          => $etudiant->id,
                     'nom'         => $etudiant->nom,
                     'prenom'      => $etudiant->prenom,
-                    'poste'       => $etudiant->poste, // ✅ CORRIGÉ
+                    'poste'       => $etudiant->poste,
                     'email'       => $etudiant->email,
                     'telephone'   => $etudiant->telephone,
                     'competences' => $etudiant->competences_array,
-                    'photoProfil' => $etudiant->photoProfil 
-                        ? asset('storage/' . $etudiant->photoProfil) 
-                        : null,
-                    'cv'          => $etudiant->cv 
-                        ? asset('storage/' . $etudiant->cv) 
-                        : null,
+                    'photoProfil' => $etudiant->photoProfil ?: null,
+                    'cv'          => $etudiant->cv ?: null,
                 ],
                 'offres'      => $offres,
                 'activite'    => $activite,
@@ -96,12 +91,8 @@ class EtudiantController extends Controller
             'email'       => $e->email,
             'telephone'   => $e->telephone,
             'competences' => $e->competences_array,
-            'photoProfil' => $e->photoProfil 
-                ? asset('storage/' . $e->photoProfil) 
-                : null,
-            'cv'          => $e->cv 
-                ? asset('storage/' . $e->cv) 
-                : null,
+            'photoProfil' => $e->photoProfil ?: null,
+            'cv'          => $e->cv ?: null,
             'progression' => $e->progression,
         ]);
     }
@@ -131,39 +122,60 @@ class EtudiantController extends Controller
         return response()->json(['success' => 'Profil mis à jour !']);
     }
 
-    // POST upload CV
+    // POST /api/etudiant/upload-cv
     public function uploadCv(Request $request)
-{
-    $request->validate(['cv' => 'required|file|mimes:pdf|max:5120']);
+    {
+        $request->validate(['cv' => 'required|file|mimes:pdf|max:5120']);
 
-    $path = $request->file('cv')->store('cvs', 'public');
-    $request->user()->update([
-        'cv'               => $path,
-        'dateModification' => now(),
-    ]);
+        // Upload sur Cloudinary (raw pour les PDFs)
+        $result = Cloudinary::uploadFile(
+            $request->file('cv')->getRealPath(),
+            [
+                'folder'        => 'talibjob/cvs',
+                'resource_type' => 'raw',
+                'public_id'     => 'cv_' . $request->user()->id . '_' . time(),
+            ]
+        );
 
-    return response()->json([
-        'success' => 'CV uploadé !',
-        'cv'      => $path,           // chemin relatif
-        'cvUrl'   => asset('storage/' . $path),  // URL complète
-    ]);
-}
+        $url = $result->getSecurePath();
 
-    // POST upload photo
+        $request->user()->update([
+            'cv'               => $url,
+            'dateModification' => now(),
+        ]);
+
+        return response()->json([
+            'success' => 'CV uploadé !',
+            'cv'      => $url,
+            'cvUrl'   => $url,
+        ]);
+    }
+
+    // POST /api/etudiant/upload-photo
     public function uploadPhoto(Request $request)
     {
         $request->validate(['photo' => 'required|image|max:2048']);
 
-        $path = $request->file('photo')->store('photos', 'public');
+        // Upload sur Cloudinary
+        $result = Cloudinary::upload(
+            $request->file('photo')->getRealPath(),
+            [
+                'folder'    => 'talibjob/photos',
+                'public_id' => 'photo_' . $request->user()->id . '_' . time(),
+                'overwrite' => true,
+            ]
+        );
+
+        $url = $result->getSecurePath();
 
         $request->user()->update([
-            'photoProfil'      => $path,
+            'photoProfil'      => $url,
             'dateModification' => now(),
         ]);
 
         return response()->json([
             'success' => 'Photo mise à jour !',
-            'photo'   => asset('storage/' . $path) // ✅ URL directe
+            'photo'   => $url,
         ]);
     }
 
@@ -176,16 +188,8 @@ class EtudiantController extends Controller
             return response()->json(['error' => 'Aucun CV disponible.'], 404);
         }
 
-        $path = storage_path('app/public/' . $etudiant->cv);
-
-        if (!file_exists($path)) {
-            return response()->json(['error' => 'Fichier introuvable.'], 404);
-        }
-
-        return response()->download(
-            $path,
-            'CV_' . $etudiant->nom . '_' . $etudiant->prenom . '.pdf'
-        );
+        // Avec Cloudinary, on redirige directement vers l'URL
+        return response()->json(['url' => $etudiant->cv]);
     }
 
     // PUT /api/etudiant/parametres
@@ -240,13 +244,8 @@ class EtudiantController extends Controller
     public function supprimerCompte(Request $request)
     {
         $etudiant = $request->user();
-
-        // Révoquer tous les tokens Sanctum
         $etudiant->tokens()->delete();
-
-        // Supprimer le compte
         $etudiant->delete();
-
         return response()->json(['success' => 'Compte étudiant supprimé avec succès.']);
     }
 }

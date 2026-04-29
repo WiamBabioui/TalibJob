@@ -7,7 +7,7 @@ use App\Models\Candidature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class EntrepriseController extends Controller
 {
@@ -68,16 +68,26 @@ class EntrepriseController extends Controller
     {
         $request->validate(['logo' => 'required|image|max:2048']);
 
-        $path = $request->file('logo')->store('logos', 'public');
+        // Upload sur Cloudinary
+        $result = Cloudinary::upload(
+            $request->file('logo')->getRealPath(),
+            [
+                'folder'    => 'talibjob/logos',
+                'public_id' => 'logo_' . $request->user()->id . '_' . time(),
+                'overwrite' => true,
+            ]
+        );
+
+        $url = $result->getSecurePath();
 
         $request->user()->update([
-            'logo'             => $path,
+            'logo'             => $url,
             'dateModification' => now(),
         ]);
 
         return response()->json([
             'success' => 'Logo mis à jour !',
-            'logo'    => asset('storage/' . $path),
+            'logo'    => $url,
         ]);
     }
 
@@ -156,12 +166,8 @@ class EntrepriseController extends Controller
                     'email'       => $c->etudiant->email,
                     'telephone'   => $c->etudiant->telephone,
                     'competences' => $c->etudiant->competences_array,
-                    'cv'          => $c->etudiant->cv
-                        ? asset('storage/' . $c->etudiant->cv)
-                        : null,
-                    'photoProfil' => $c->etudiant->photoProfil
-                        ? asset('storage/' . $c->etudiant->photoProfil)
-                        : null,
+                    'cv'          => $c->etudiant->cv ?: null,
+                    'photoProfil' => $c->etudiant->photoProfil ?: null,
                 ],
             ]);
 
@@ -171,7 +177,7 @@ class EntrepriseController extends Controller
         ]);
     }
 
-    // GET /api/entreprise/candidatures (Bouton général)
+    // GET /api/entreprise/candidatures
     public function toutesLesCandidatures(Request $request)
     {
         $entreprise = $request->user();
@@ -192,19 +198,15 @@ class EntrepriseController extends Controller
                     'email'       => $c->etudiant->email,
                     'telephone'   => $c->etudiant->telephone,
                     'competences' => $c->etudiant->competences_array,
-                    'cv'          => $c->etudiant->cv
-                        ? asset('storage/' . $c->etudiant->cv)
-                        : null,
-                    'photoProfil' => $c->etudiant->photoProfil
-                        ? asset('storage/' . $c->etudiant->photoProfil)
-                        : null,
+                    'cv'          => $c->etudiant->cv ?: null,
+                    'photoProfil' => $c->etudiant->photoProfil ?: null,
                 ],
             ]);
 
         return response()->json($candidatures);
     }
 
-    // ✅ FONCTION AJOUTÉE ET CORRIGÉE
+    // PUT /api/entreprise/candidatures/{id}/statut
     public function updateStatut(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -217,23 +219,19 @@ class EntrepriseController extends Controller
         }
 
         try {
-            // Vérification que la candidature appartient bien à une mission de cette entreprise
             $candidature = Candidature::whereHas('mission', function($q) use ($request) {
                 $q->where('idEntreprise', $request->user()->id);
             })->findOrFail($id);
 
-            // Mise à jour manuelle car $timestamps = false dans le modèle
             $candidature->update([
-                'statut' => $request->statut,
+                'statut'                => $request->statut,
                 'commentaireEntreprise' => $request->commentaireEntreprise,
-                'dateReponse' => now(),
+                'dateReponse'           => now(),
             ]);
 
             return response()->json(['success' => 'Statut mis à jour avec succès !']);
-
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Erreur lors de la mise à jour : ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Erreur : ' . $e->getMessage()], 500);
         }
     }
-    
 }
