@@ -9,6 +9,16 @@ use Illuminate\Support\Facades\Validator;
 
 class MissionController extends Controller
 {
+    /**
+     * Retourne l'URL correcte du logo (Cloudinary ou storage local).
+     */
+    private function logoUrl(?string $logo): ?string
+    {
+        if (!$logo) return null;
+        if (str_starts_with($logo, 'http')) return $logo; // déjà une URL Cloudinary
+        return asset('storage/' . $logo);                 // ancien chemin local
+    }
+
     // GET /api/missions  (liste publique avec filtres)
     public function index(Request $request)
     {
@@ -26,7 +36,7 @@ class MissionController extends Controller
                 'type'            => $m->type,
                 'remuneration'    => $m->remuneration,
                 'lieu'            => $m->lieu,
-                'entreprise'      => ['id' => $m->entreprise->id, 'nom' => $m->entreprise->nom, 'logo' => $m->entreprise->logo ? asset('storage/' . $m->entreprise->logo) : null],
+                'entreprise'      => ['id' => $m->entreprise->id, 'nom' => $m->entreprise->nom, 'logo' => $this->logoUrl($m->entreprise->logo)],
                 'datePublication' => $m->datePublication?->diffForHumans(),
                 'vues'            => $m->vues,
             ]);
@@ -60,7 +70,7 @@ class MissionController extends Controller
                 'nom'         => $mission->entreprise->nom,
                 'secteur'     => $mission->entreprise->secteur,
                 'description' => $mission->entreprise->description,
-                'logo'        => $mission->entreprise->logo ? asset('storage/' . $mission->entreprise->logo) : null,
+                'logo'        => $this->logoUrl($mission->entreprise->logo),
                 'siteWeb'     => $mission->entreprise->siteWeb,
             ],
         ]);

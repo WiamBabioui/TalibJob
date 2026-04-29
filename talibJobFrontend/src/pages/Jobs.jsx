@@ -183,7 +183,21 @@ export default function Jobs() {
                       <div className="d-flex align-items-center gap-3 mb-3">
                         {m.entreprise?.logo ? (
                           <img src={m.entreprise.logo} alt={nomEnt}
-                            style={{ width: 46, height: 46, borderRadius: 12, objectFit: "cover", flexShrink: 0, border: "1px solid #e8eaf0" }} />
+                            style={{ width: 46, height: 46, borderRadius: 12, objectFit: "cover", flexShrink: 0, border: "1px solid #e8eaf0" }}
+                            onError={e => {
+                              e.currentTarget.style.display = "none";
+                              e.currentTarget.nextSibling.style.display = "flex";
+                            }} />
+                          <div style={{
+                            display: "none",
+                            width: 46, height: 46, borderRadius: 12,
+                            background: abg, color: atc,
+                            fontWeight: 700, fontSize: 19,
+                            alignItems: "center", justifyContent: "center",
+                            flexShrink: 0,
+                          }}>
+                            {nomEnt[0].toUpperCase()}
+                          </div>
                         ) : (
                           <div style={{
                             width: 46, height: 46, borderRadius: 12,

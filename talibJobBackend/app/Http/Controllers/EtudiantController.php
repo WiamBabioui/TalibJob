@@ -57,7 +57,11 @@ class EtudiantController extends Controller
                 'remuneration'   => $m->remuneration,
                 'lieu'           => $m->lieu,
                 'entreprise'     => $m->entreprise->nom,
-                'entrepriseLogo' => $m->entreprise->logo ?: null,
+                'entrepriseLogo' => $m->entreprise->logo
+                    ? (str_starts_with($m->entreprise->logo, 'http')
+                        ? $m->entreprise->logo
+                        : asset('storage/' . $m->entreprise->logo))
+                    : null,
             ]);
 
         $activite = Candidature::with('mission')
