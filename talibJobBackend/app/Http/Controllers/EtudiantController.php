@@ -12,6 +12,23 @@ use Illuminate\Support\Facades\Validator;
 class EtudiantController extends Controller
 {
     /**
+     * Nettoie une URL potentiellement cassée (ex: storage/https://res.cloudinary.com/...).
+     * Retourne directement l'URL Cloudinary si elle est embarquée dans une URL cassée.
+     */
+    private function cleanUrl(?string $url): ?string
+    {
+        if (!$url) return null;
+        // Si l'URL contient une URL Cloudinary embarquée, on l'extrait
+        if (preg_match('#(https://res\.cloudinary\.com/[^\s]+)#', $url, $matches)) {
+            return $matches[1];
+        }
+        // Si c'est déjà une URL propre
+        if (str_starts_with($url, 'http')) return $url;
+        // Ancien chemin local
+        return asset('storage/' . $url);
+    }
+
+    /**
      * Upload un fichier sur Cloudinary via l'API REST (sans package).
      */
     private function uploadToCloudinary($filePath, $folder, $resourceType = 'image')
@@ -100,8 +117,8 @@ class EtudiantController extends Controller
                     'email'       => $etudiant->email,
                     'telephone'   => $etudiant->telephone,
                     'competences' => $etudiant->competences_array,
-                    'photoProfil' => $etudiant->photoProfil ?: null,
-                    'cv'          => $etudiant->cv ?: null,
+                    'photoProfil' => $this->cleanUrl($etudiant->photoProfil),
+                    'cv'          => $this->cleanUrl($etudiant->cv),
                 ],
                 'offres'      => $offres,
                 'activite'    => $activite,
@@ -123,8 +140,8 @@ class EtudiantController extends Controller
             'email'       => $e->email,
             'telephone'   => $e->telephone,
             'competences' => $e->competences_array,
-            'photoProfil' => $e->photoProfil ?: null,
-            'cv'          => $e->cv ?: null,
+            'photoProfil' => $this->cleanUrl($e->photoProfil),
+            'cv'          => $this->cleanUrl($e->cv),
             'progression' => $e->progression,
         ]);
     }
