@@ -150,7 +150,11 @@ export default function MonProfil() {
   const initial = fullName[0]?.toUpperCase() || "E";
   const [bgColor, textColor] = avatarColor(fullName);
   const photoUrl = toAbsoluteUrl(profil?.photoProfil);
-  const cvUrl = profil?.cv ? `${BASE_URL}/storage/${profil.cv}` : null;
+  const cvUrl = profil?.cv
+    ? (profil.cv.startsWith('http')
+        ? profil.cv                              // URL Cloudinary directe
+        : `${BASE_URL}/storage/${profil.cv}`)    // ancien chemin local
+    : null;
 
   return (
     <div>
