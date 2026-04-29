@@ -6,11 +6,40 @@ use App\Models\Mission;
 use App\Models\Candidature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class EntrepriseController extends Controller
 {
+    /**
+     * Upload un fichier sur Cloudinary via l'API REST (sans package).
+     */
+    private function uploadToCloudinary($filePath, $folder, $resourceType = 'image')
+    {
+        $cloudName   = env('CLOUDINARY_CLOUD_NAME');
+        $apiKey      = env('CLOUDINARY_KEY');
+        $apiSecret   = env('CLOUDINARY_SECRET');
+        $timestamp   = time();
+        $paramsToSign = "folder={$folder}&timestamp={$timestamp}";
+        $signature   = hash('sha256', $paramsToSign . $apiSecret);
+
+        $url = "https://api.cloudinary.com/v1_1/{$cloudName}/{$resourceType}/upload";
+
+        $response = Http::attach('file', file_get_contents($filePath), basename($filePath))
+            ->post($url, [
+                'api_key'   => $apiKey,
+                'timestamp' => $timestamp,
+                'signature' => $signature,
+                'folder'    => $folder,
+            ]);
+
+        if (!$response->successful()) {
+            throw new \Exception('Cloudinary upload failed: ' . $response->body());
+        }
+
+        return $response->json()['secure_url'];
+    }
+
     // GET /api/entreprise/dashboard
     public function dashboard(Request $request)
     {
@@ -68,27 +97,25 @@ class EntrepriseController extends Controller
     {
         $request->validate(['logo' => 'required|image|max:2048']);
 
-        // Upload sur Cloudinary
-        $result = Cloudinary::upload(
-            $request->file('logo')->getRealPath(),
-            [
-                'folder'    => 'talibjob/logos',
-                'public_id' => 'logo_' . $request->user()->id . '_' . time(),
-                'overwrite' => true,
-            ]
-        );
+        try {
+            $url = $this->uploadToCloudinary(
+                $request->file('logo')->getRealPath(),
+                'talibjob/logos',
+                'image'
+            );
 
-        $url = $result->getSecurePath();
+            $request->user()->update([
+                'logo'             => $url,
+                'dateModification' => now(),
+            ]);
 
-        $request->user()->update([
-            'logo'             => $url,
-            'dateModification' => now(),
-        ]);
-
-        return response()->json([
-            'success' => 'Logo mis à jour !',
-            'logo'    => $url,
-        ]);
+            return response()->json([
+                'success' => 'Logo mis à jour !',
+                'logo'    => $url,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     // PUT /api/entreprise/parametres
@@ -210,7 +237,7 @@ class EntrepriseController extends Controller
     public function updateStatut(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'statut' => 'required|in:vue,acceptee,refusee',
+            'statut'                => 'required|in:vue,acceptee,refusee',
             'commentaireEntreprise' => 'nullable|string',
         ]);
 

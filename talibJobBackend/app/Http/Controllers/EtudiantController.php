@@ -6,11 +6,40 @@ use App\Models\Mission;
 use App\Models\Candidature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class EtudiantController extends Controller
 {
+    /**
+     * Upload un fichier sur Cloudinary via l'API REST (sans package).
+     */
+    private function uploadToCloudinary($filePath, $folder, $resourceType = 'image')
+    {
+        $cloudName   = env('CLOUDINARY_CLOUD_NAME');
+        $apiKey      = env('CLOUDINARY_KEY');
+        $apiSecret   = env('CLOUDINARY_SECRET');
+        $timestamp   = time();
+        $paramsToSign = "folder={$folder}&timestamp={$timestamp}";
+        $signature   = hash('sha256', $paramsToSign . $apiSecret);
+
+        $url = "https://api.cloudinary.com/v1_1/{$cloudName}/{$resourceType}/upload";
+
+        $response = Http::attach('file', file_get_contents($filePath), basename($filePath))
+            ->post($url, [
+                'api_key'   => $apiKey,
+                'timestamp' => $timestamp,
+                'signature' => $signature,
+                'folder'    => $folder,
+            ]);
+
+        if (!$response->successful()) {
+            throw new \Exception('Cloudinary upload failed: ' . $response->body());
+        }
+
+        return $response->json()['secure_url'];
+    }
+
     // GET /api/etudiant/dashboard
     public function dashboard(Request $request)
     {
@@ -22,12 +51,12 @@ class EtudiantController extends Controller
             ->limit(5)
             ->get()
             ->map(fn($m) => [
-                'id'           => $m->id,
-                'titre'        => $m->titre,
-                'type'         => $m->type,
-                'remuneration' => $m->remuneration,
-                'lieu'         => $m->lieu,
-                'entreprise'   => $m->entreprise->nom,
+                'id'             => $m->id,
+                'titre'          => $m->titre,
+                'type'           => $m->type,
+                'remuneration'   => $m->remuneration,
+                'lieu'           => $m->lieu,
+                'entreprise'     => $m->entreprise->nom,
                 'entrepriseLogo' => $m->entreprise->logo ?: null,
             ]);
 
@@ -82,7 +111,6 @@ class EtudiantController extends Controller
     public function profil(Request $request)
     {
         $e = $request->user();
-
         return response()->json([
             'id'          => $e->id,
             'nom'         => $e->nom,
@@ -122,73 +150,66 @@ class EtudiantController extends Controller
         return response()->json(['success' => 'Profil mis à jour !']);
     }
 
-    // POST /api/etudiant/upload-cv
-    public function uploadCv(Request $request)
-    {
-        $request->validate(['cv' => 'required|file|mimes:pdf|max:5120']);
-
-        // Upload sur Cloudinary (raw pour les PDFs)
-        $result = Cloudinary::uploadFile(
-            $request->file('cv')->getRealPath(),
-            [
-                'folder'        => 'talibjob/cvs',
-                'resource_type' => 'raw',
-                'public_id'     => 'cv_' . $request->user()->id . '_' . time(),
-            ]
-        );
-
-        $url = $result->getSecurePath();
-
-        $request->user()->update([
-            'cv'               => $url,
-            'dateModification' => now(),
-        ]);
-
-        return response()->json([
-            'success' => 'CV uploadé !',
-            'cv'      => $url,
-            'cvUrl'   => $url,
-        ]);
-    }
-
     // POST /api/etudiant/upload-photo
     public function uploadPhoto(Request $request)
     {
         $request->validate(['photo' => 'required|image|max:2048']);
 
-        // Upload sur Cloudinary
-        $result = Cloudinary::upload(
-            $request->file('photo')->getRealPath(),
-            [
-                'folder'    => 'talibjob/photos',
-                'public_id' => 'photo_' . $request->user()->id . '_' . time(),
-                'overwrite' => true,
-            ]
-        );
+        try {
+            $url = $this->uploadToCloudinary(
+                $request->file('photo')->getRealPath(),
+                'talibjob/photos',
+                'image'
+            );
 
-        $url = $result->getSecurePath();
+            $request->user()->update([
+                'photoProfil'      => $url,
+                'dateModification' => now(),
+            ]);
 
-        $request->user()->update([
-            'photoProfil'      => $url,
-            'dateModification' => now(),
-        ]);
+            return response()->json([
+                'success' => 'Photo mise à jour !',
+                'photo'   => $url,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 
-        return response()->json([
-            'success' => 'Photo mise à jour !',
-            'photo'   => $url,
-        ]);
+    // POST /api/etudiant/upload-cv
+    public function uploadCv(Request $request)
+    {
+        $request->validate(['cv' => 'required|file|mimes:pdf|max:5120']);
+
+        try {
+            $url = $this->uploadToCloudinary(
+                $request->file('cv')->getRealPath(),
+                'talibjob/cvs',
+                'raw'
+            );
+
+            $request->user()->update([
+                'cv'               => $url,
+                'dateModification' => now(),
+            ]);
+
+            return response()->json([
+                'success' => 'CV uploadé !',
+                'cv'      => $url,
+                'cvUrl'   => $url,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     // Télécharger CV
     public function downloadCv(Request $request)
     {
         $etudiant = $request->user();
-
         if (!$etudiant->cv) {
             return response()->json(['error' => 'Aucun CV disponible.'], 404);
         }
-
-        // Avec Cloudinary, on redirige directement vers l'URL
         return response()->json(['url' => $etudiant->cv]);
     }
 
